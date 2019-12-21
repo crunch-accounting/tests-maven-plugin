@@ -4,5 +4,5 @@ import java.nio.file.Path;
 
 @FunctionalInterface
 public interface VirtualMethodVisitor extends AsmVisitor {
-    void visit(Path eachClass, String owner, String name, String desc);
+    void visit(String className, String owner, String name, String desc);
 }

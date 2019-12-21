@@ -2,5 +2,5 @@ package uk.co.crunch.platform.asm;
 
 @FunctionalInterface
 public interface MethodAnnotationVisitor extends AsmVisitor {
-    void visit(String descriptor, String name, Object value);
+    void visit(String className, String descriptor, String name, Object value);
 }

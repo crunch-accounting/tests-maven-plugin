@@ -37,6 +37,9 @@ public class AsmUtils {
                     .collect(toList())) {
 
                 try (InputStream theStream = Files.newInputStream(eachClass)) {
+
+                    final String className = eachClass.getFileName().toString();
+
                     new ClassReader(theStream).accept(new ClassVisitor(API_VERSION) {
 
                         @Override
@@ -48,7 +51,7 @@ public class AsmUtils {
                                 @Override
                                 public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
                                     for (VirtualMethodVisitor handler : filterHandlers(VirtualMethodVisitor.class, handlers).collect(toList())) {
-                                        handler.visit(eachClass, owner, name, desc);
+                                        handler.visit(className, owner, name, desc);
                                     }
                                 }
 
@@ -56,11 +59,15 @@ public class AsmUtils {
                                 public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
                                     lastAnnotationDescriptor = descriptor;
 
+                                    for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
+                                        handler.visit(className, lastAnnotationDescriptor, name, null);
+                                    }
+
                                     return new AnnotationVisitor(API_VERSION) {
                                         @Override
                                         public void visit(final String name, final Object value) {
                                             for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                                handler.visit(lastAnnotationDescriptor, name, value);
+                                                handler.visit(className, lastAnnotationDescriptor, name, value);
                                             }
                                         }
 
@@ -70,7 +77,7 @@ public class AsmUtils {
                                                 @Override
                                                 public void visit(final String name, final Object value) {
                                                     for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                                        handler.visit(lastAnnotationDescriptor, arrayName, value);
+                                                        handler.visit(className, lastAnnotationDescriptor, arrayName, value);
                                                     }
                                                 }
                                             };
