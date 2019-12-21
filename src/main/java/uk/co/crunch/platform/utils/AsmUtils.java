@@ -3,6 +3,7 @@ package uk.co.crunch.platform.utils;
 import org.objectweb.asm.*;
 import uk.co.crunch.platform.asm.AsmVisitor;
 import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
+import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
 import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
 import uk.co.crunch.platform.asm.VirtualMethodVisitor;
 
@@ -43,7 +44,15 @@ public class AsmUtils {
                     new ClassReader(theStream).accept(new ClassVisitor(API_VERSION) {
 
                         @Override
-                        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+                        public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
+                            for (ClassAnnotationVisitor handler : filterHandlers(ClassAnnotationVisitor.class, handlers).collect(toList())) {
+                                handler.visitClassAnnotation(className, descriptor);
+                            }
+                            return null;
+                        }
+
+                        @Override
+                        public MethodVisitor visitMethod(int access, String methodName, String desc, String signature, String[] exceptions) {
                             return new MethodVisitor(API_VERSION) {
 
                                 String lastAnnotationDescriptor = null;
@@ -60,14 +69,14 @@ public class AsmUtils {
                                     lastAnnotationDescriptor = descriptor;
 
                                     for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                        handler.visit(className, lastAnnotationDescriptor, name, null);
+                                        handler.visit(className, descriptor, methodName, null);
                                     }
 
                                     return new AnnotationVisitor(API_VERSION) {
                                         @Override
-                                        public void visit(final String name, final Object value) {
+                                        public void visit(final String annotationName, final Object value) {
                                             for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                                handler.visit(className, lastAnnotationDescriptor, name, value);
+                                                handler.visit(className, lastAnnotationDescriptor, annotationName, value);
                                             }
                                         }
 

@@ -1,6 +1,6 @@
 package uk.co.crunch.platform.handlers;
 
-import uk.co.crunch.platform.asm.AsmVisitor;
+import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
 import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
 
@@ -8,15 +8,39 @@ public class TestHandler implements HandlerOperation {
     @Override
     public void run(CrunchServiceMojo mojo) {
 
-        // FIXME Check for @Disabled??
-        final AsmVisitor testVisitor = (MethodAnnotationVisitor) (String className, String descriptor, String name, Object value) -> {
-            if (matchesApiClassName(descriptor)) {
-                mojo.getLog().info("Test: " + className + " : " + name);
-            }
-        };
-
         // TODO: Warn about "test" prefix.
-        mojo.analyseCrunchClasses(() -> false, testVisitor);
+        // TODO: Warn about public class and test methods
+        mojo.analyseCrunchClasses(() -> false, new Vis(mojo));
+    }
+
+    private static class Vis implements MethodAnnotationVisitor, ClassAnnotationVisitor {
+
+        private final CrunchServiceMojo mojo;
+
+        private boolean isKotlin = false;
+
+        public Vis(CrunchServiceMojo mojo) {
+            this.mojo = mojo;
+        }
+
+        @Override
+        public void visitClassAnnotation(String className, String descriptor) {
+            if (descriptor.endsWith("kotlin/Metadata;")) {
+                isKotlin = true;
+            }
+        }
+
+        @Override
+        public void visit(String className, String descriptor, String name, Object value) {
+            // FIXME Check for @Disabled??
+            if (matchesApiClassName(descriptor)) {
+                if (isKotlin) {
+                    mojo.getLog().info("Kotlin Test: " + className + " : " + name);
+                } else {
+                    mojo.getLog().info("Java Test: " + className + " : " + name);
+                }
+            }
+        }
     }
 
     private static boolean matchesApiClassName(String desc) {
