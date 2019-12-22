@@ -4,7 +4,7 @@ public class StringUtils {
 
     // FIXME Swiped from Spring's StringUtils
     public static String replace(String inString, String oldPattern, String newPattern) {
-        if ( inString.isEmpty() || oldPattern.isEmpty() || newPattern == null) {
+        if (inString.isEmpty() || oldPattern.isEmpty() || newPattern == null) {
             return inString;
         }
         StringBuilder sb = new StringBuilder();

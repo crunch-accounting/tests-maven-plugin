@@ -1,11 +1,8 @@
 package uk.co.crunch.platform.utils;
 
 import org.objectweb.asm.*;
-import uk.co.crunch.platform.asm.AsmVisitor;
+import uk.co.crunch.platform.asm.*;
 import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
-import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
-import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
-import uk.co.crunch.platform.asm.VirtualMethodVisitor;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,14 +50,19 @@ public class AsmUtils {
 
                         @Override
                         public MethodVisitor visitMethod(int access, String methodName, String desc, String signature, String[] exceptions) {
+
+                            for (MethodDefinitionVisitor handler : filterHandlers(MethodDefinitionVisitor.class, handlers).collect(toList())) {
+                                handler.visitMethod(access, methodName, desc, signature, exceptions);
+                            }
+
                             return new MethodVisitor(API_VERSION) {
 
                                 String lastAnnotationDescriptor = null;
 
                                 @Override
                                 public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-                                    for (VirtualMethodVisitor handler : filterHandlers(VirtualMethodVisitor.class, handlers).collect(toList())) {
-                                        handler.visit(className, owner, name, desc);
+                                    for (MethodCallVisitor handler : filterHandlers(MethodCallVisitor.class, handlers).collect(toList())) {
+                                        handler.visitMethodCall(className, owner, name, desc);
                                     }
                                 }
 
@@ -69,14 +71,14 @@ public class AsmUtils {
                                     lastAnnotationDescriptor = descriptor;
 
                                     for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                        handler.visit(className, descriptor, methodName, null);
+                                        handler.visitMethodAnnotation(className, descriptor, methodName, null);
                                     }
 
                                     return new AnnotationVisitor(API_VERSION) {
                                         @Override
                                         public void visit(final String annotationName, final Object value) {
                                             for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                                handler.visit(className, lastAnnotationDescriptor, annotationName, value);
+                                                handler.visitMethodAnnotation(className, lastAnnotationDescriptor, annotationName, value);
                                             }
                                         }
 
@@ -86,7 +88,7 @@ public class AsmUtils {
                                                 @Override
                                                 public void visit(final String name, final Object value) {
                                                     for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                                        handler.visit(className, lastAnnotationDescriptor, arrayName, value);
+                                                        handler.visitMethodAnnotation(className, lastAnnotationDescriptor, arrayName, value);
                                                     }
                                                 }
                                             };

@@ -1,7 +1,10 @@
 package uk.co.crunch.platform.handlers;
 
+import org.objectweb.asm.Opcodes;
 import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
 import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
+import uk.co.crunch.platform.asm.MethodDefinitionVisitor;
+import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
 
 public class TestHandler implements HandlerOperation {
@@ -13,11 +16,15 @@ public class TestHandler implements HandlerOperation {
         mojo.analyseCrunchClasses(() -> false, new Vis(mojo));
     }
 
-    private static class Vis implements MethodAnnotationVisitor, ClassAnnotationVisitor {
+    private static class Vis implements MethodAnnotationVisitor, ClassAnnotationVisitor, MethodDefinitionVisitor {
 
         private final CrunchServiceMojo mojo;
 
-        private boolean isKotlin = false;
+        private boolean isKotlin;
+        private boolean foundJUnit4;
+        private boolean foundJUnit5;
+        private boolean isMethodPublic;
+        private boolean isMethodPrivate;
 
         public Vis(CrunchServiceMojo mojo) {
             this.mojo = mojo;
@@ -26,25 +33,48 @@ public class TestHandler implements HandlerOperation {
         @Override
         public void visitClassAnnotation(String className, String descriptor) {
             if (descriptor.endsWith("kotlin/Metadata;")) {
-                isKotlin = true;
+                this.isKotlin = true;
             }
         }
 
         @Override
-        public void visit(String className, String descriptor, String name, Object value) {
+        public void visitMethodAnnotation(String className, String descriptor, String name, Object value) {
             // FIXME Check for @Disabled??
-            if (matchesApiClassName(descriptor)) {
+
+            var gotJUnit5 = descriptor.contains("L" + "org/junit/jupiter/api/Test;");
+            var gotJUnit4 = descriptor.contains("L" + "org/junit/Test;");
+
+            if (gotJUnit4 || gotJUnit5) {
+
+                if (this.foundJUnit4 && gotJUnit5 || this.foundJUnit5 && gotJUnit4) {
+                    throw new CrunchRuleViolationException("Cannot combine JUnit 4 and JUnit 5 tests! See: " + className);
+                }
+
+                this.foundJUnit4 |= gotJUnit4;
+                this.foundJUnit5 |= gotJUnit5;
+
                 if (isKotlin) {
                     mojo.getLog().info("Kotlin Test: " + className + " : " + name);
                 } else {
                     mojo.getLog().info("Java Test: " + className + " : " + name);
                 }
+
+                // JUnit5 test methods don't need to be public (irrelevant for Kotlin)
+                if (!isKotlin && gotJUnit5 && isMethodPublic) {
+                    mojo.getLog().warn("Test: " + className + " : " + name + " does not need to be public");
+                }
             }
         }
-    }
 
-    private static boolean matchesApiClassName(String desc) {
-        return desc.contains("L" + "org/junit/jupiter/api/Test;") ||
-                desc.contains("L" + "org/junit/Test;");
+        @Override
+        public void visitMethod(int access, String methodName, String desc, String signature, String[] exceptions) {
+            isMethodPublic = isMethodPrivate = false;
+
+            if ((access & Opcodes.ACC_PUBLIC) != 0) {
+                isMethodPublic = true;
+            } else if ((access & Opcodes.ACC_PRIVATE) != 0) {
+                isMethodPrivate = true;
+            }
+        }
     }
 }
