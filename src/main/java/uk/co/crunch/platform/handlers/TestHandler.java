@@ -1,7 +1,9 @@
 package uk.co.crunch.platform.handlers;
 
+import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Opcodes;
 import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
+import uk.co.crunch.platform.asm.ClassDefinitionVisitor;
 import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
 import uk.co.crunch.platform.asm.MethodDefinitionVisitor;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
@@ -11,12 +13,16 @@ public class TestHandler implements HandlerOperation {
     @Override
     public void run(CrunchServiceMojo mojo) {
 
-        // TODO: Warn about "test" prefix.
-        // TODO: Warn about public class and test methods
-        mojo.analyseCrunchClasses(() -> false, new Vis(mojo));
+        var time = System.currentTimeMillis();
+        try {
+            mojo.analyseCrunchClasses(() -> false, new Vis(mojo));
+        } finally {
+            var newTime = System.currentTimeMillis();
+            mojo.getLog().info("Test analysis completed in " + (newTime - time) + " msecs");
+        }
     }
 
-    private static class Vis implements MethodAnnotationVisitor, ClassAnnotationVisitor, MethodDefinitionVisitor {
+    private static class Vis implements ClassDefinitionVisitor, ClassAnnotationVisitor, MethodAnnotationVisitor, MethodDefinitionVisitor {
 
         private final CrunchServiceMojo mojo;
 
@@ -26,8 +32,16 @@ public class TestHandler implements HandlerOperation {
         private boolean isMethodPublic;
         private boolean isMethodPrivate;
 
+        private boolean isClassPublic;
+        private boolean shownClassPublicWarning;
+
         public Vis(CrunchServiceMojo mojo) {
             this.mojo = mojo;
+        }
+
+        @Override
+        public void visitClass(int access, String name, String signature, String superName, String[] interfaces) {
+            isClassPublic = ((access & Opcodes.ACC_PUBLIC) != 0);
         }
 
         @Override
@@ -59,9 +73,14 @@ public class TestHandler implements HandlerOperation {
                     mojo.getLog().info("Java Test: " + className + " : " + name);
                 }
 
+                if (!this.shownClassPublicWarning && isClassPublic && !isKotlin) {
+                    mojo.getLog().warn("Java test class `" + displayClassName(className) + "` does not need to be public");
+                    this.shownClassPublicWarning = true;
+                }
+
                 // JUnit5 test methods don't need to be public (irrelevant for Kotlin)
                 if (!isKotlin && gotJUnit5 && isMethodPublic) {
-                    mojo.getLog().warn("Test: " + className + " : " + name + " does not need to be public");
+                    mojo.getLog().warn("Test `" + displayClassName(className) + "." + name + "` does not need to be public");
                 }
             }
         }
@@ -76,5 +95,9 @@ public class TestHandler implements HandlerOperation {
                 isMethodPrivate = true;
             }
         }
+    }
+
+    private static String displayClassName(String className) {
+        return StringUtils.stripEnd(className, ".class");
     }
 }

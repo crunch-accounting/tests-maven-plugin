@@ -41,6 +41,13 @@ public class AsmUtils {
                     new ClassReader(theStream).accept(new ClassVisitor(API_VERSION) {
 
                         @Override
+                        public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+                            for (ClassDefinitionVisitor handler : filterHandlers(ClassDefinitionVisitor.class, handlers).collect(toList())) {
+                                handler.visitClass(access, name, signature, superName, interfaces);
+                            }
+                        }
+
+                        @Override
                         public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
                             for (ClassAnnotationVisitor handler : filterHandlers(ClassAnnotationVisitor.class, handlers).collect(toList())) {
                                 handler.visitClassAnnotation(className, descriptor);
