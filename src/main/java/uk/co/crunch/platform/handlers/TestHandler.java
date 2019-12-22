@@ -2,6 +2,7 @@ package uk.co.crunch.platform.handlers;
 
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Opcodes;
+import uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides;
 import uk.co.crunch.platform.asm.*;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
@@ -81,6 +82,7 @@ public class TestHandler implements HandlerOperation {
                 }
 
                 if (this.assertionTypes.contains(AssertionType.JUNIT4)) {
+                    // CrunchTestValidationOverrides.JUNIT4_ASSERTIONS;
                     throw new CrunchRuleViolationException("We should stop using JUnit4 assertions");
                 }
 
