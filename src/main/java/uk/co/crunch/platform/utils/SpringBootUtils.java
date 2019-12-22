@@ -20,10 +20,10 @@ import static java.util.Optional.of;
 public class SpringBootUtils {
 
     public static Optional<String> determineContextPath(CrunchServiceMojo mojo) {
-        final File resDir = /* main */ MojoUtils.pickResourcesDirectory( mojo.getProject().getResources() );
+        final File resDir = /* main */ MojoUtils.pickResourcesDirectory(mojo.getProject().getResources());
 
         try {
-            try (InputStream is = new FileInputStream( new File(resDir, "application.properties"))) {
+            try (InputStream is = new FileInputStream(new File(resDir, "application.properties"))) {
                 final Properties appProps = new Properties();
                 appProps.load(is);
 
@@ -31,8 +31,8 @@ public class SpringBootUtils {
             }
         } catch (IOException e) {
             try {
-                try (InputStream is = new FileInputStream( new File(resDir, "application.yml"))) {
-                    final Map<String,Map<String,String>> yaml = YamlInstanceFactory.create().loadAs(is, Map.class);
+                try (InputStream is = new FileInputStream(new File(resDir, "application.yml"))) {
+                    final Map<String, Map<String, String>> yaml = YamlInstanceFactory.create().loadAs(is, Map.class);
 
                     return of(getContextPathProperty(yaml).replace("/", ""));
                 }
@@ -75,8 +75,8 @@ public class SpringBootUtils {
     public static String getSpringBootVersion(final MavenProject project) {
         for (Artifact each : project.getArtifacts()) {
             if (each.getGroupId().equals("org.springframework.boot") &&
-                each.getArtifactId().equals("spring-boot") &&
-               !each.getScope().equals("test")) {
+                    each.getArtifactId().equals("spring-boot") &&
+                    !each.getScope().equals("test")) {
                 return each.getVersion();
             }
         }
