@@ -54,21 +54,6 @@ public class CrunchServiceMojo
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     protected MavenProject project;
 
-    @Parameter
-    private boolean skipLogbackGeneration;  // default = null => false
-
-    @Parameter
-    private boolean skipReadmeGeneration;  // default = null => false
-
-    @Parameter
-    private boolean skipLocustGeneration;  // default = null => false
-
-    @Parameter
-    private boolean skipKronGeneration;  // default = null => false
-
-    @Parameter
-    private boolean skipSwaggerGeneration;  // default = null => false
-
     @Parameter(defaultValue = "${session}", readonly = true, required = true)
     protected MavenSession session;
 
