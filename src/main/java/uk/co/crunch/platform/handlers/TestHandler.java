@@ -10,6 +10,7 @@ import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ public class TestHandler implements HandlerOperation {
         private boolean foundJUnit5;
 
         private final EnumSet<CrunchTestValidationOverrides> classLevelOverrides = EnumSet.noneOf(CrunchTestValidationOverrides.class);
+        private final EnumSet<CrunchTestValidationOverrides> classLevelOverrideWarningShown = EnumSet.noneOf(CrunchTestValidationOverrides.class);
 
         private final Multiset<AssertionType> assertionTypes = EnumMultiset.create(AssertionType.class);
         private boolean shownKotlinAssertJMigrateWarning;
@@ -131,7 +133,10 @@ public class TestHandler implements HandlerOperation {
 
         private void handleViolation(CrunchTestValidationOverrides override, ViolationHandler handler) {
             if (isOverridden(override)) {
-                mojo.getLog().warn(handler.getMessage());
+                if (!this.classLevelOverrideWarningShown.contains(override)) {
+                    mojo.getLog().warn(handler.getMessage());
+                    this.classLevelOverrideWarningShown.add(override);
+                }
             } else {
                 throw new CrunchRuleViolationException(handler.getMessage());
             }
