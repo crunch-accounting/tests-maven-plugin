@@ -9,10 +9,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.stripEnd;
 
 public class AsmUtils {
 
@@ -49,10 +50,49 @@ public class AsmUtils {
 
                         @Override
                         public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
-                            for (ClassAnnotationVisitor handler : filterHandlers(ClassAnnotationVisitor.class, handlers).collect(toList())) {
-                                handler.visitClassAnnotation(className, descriptor);
-                            }
-                            return null;
+
+                            final Map<String, List<Object>> annotationValues = new LinkedHashMap<>();
+                            final String[] currentArrayName = {""};
+
+                            return new AnnotationVisitor(API_VERSION) {
+                                @Override
+                                public void visit(final String annotationName, final Object value) {
+                                    for (ClassAnnotationVisitor handler : filterHandlers(ClassAnnotationVisitor.class, handlers).collect(toList())) {
+                                        handler.visitClassAnnotation(className, descriptor, annotationName, value);
+                                    }
+                                }
+
+                                @Override
+                                public AnnotationVisitor visitArray(final String arrayName) {
+
+                                    currentArrayName[0] = arrayName;
+
+                                    return new AnnotationVisitor(API_VERSION) {
+                                        @Override
+                                        public void visit(final String name, final Object value) {
+                                            if (!annotationValues.containsKey(arrayName)) {
+                                                annotationValues.put(arrayName, new ArrayList<>());
+                                            }
+                                            annotationValues.get(arrayName).add(value);
+                                        }
+
+                                        @Override
+                                        public void visitEnum(final String name, final String descriptor, final String value) {
+                                            if (!annotationValues.containsKey(arrayName)) {
+                                                annotationValues.put(arrayName, new ArrayList<>());
+                                            }
+                                            annotationValues.get(arrayName).add(stripEnd(descriptor, ";") + "." + value);
+                                        }
+                                    };
+                                }
+
+                                @Override
+                                public void visitEnd() {
+                                    for (ClassAnnotationVisitor handler : filterHandlers(ClassAnnotationVisitor.class, handlers).collect(toList())) {
+                                        handler.visitClassAnnotation(className, descriptor, annotationValues);
+                                    }
+                                }
+                            };
                         }
 
                         @Override
