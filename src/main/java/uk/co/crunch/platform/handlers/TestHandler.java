@@ -1,5 +1,7 @@
 package uk.co.crunch.platform.handlers;
 
+import com.google.common.collect.EnumMultiset;
+import com.google.common.collect.Multiset;
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.Opcodes;
 import uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides;
@@ -11,7 +13,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.*;
 
@@ -25,9 +26,8 @@ public class TestHandler implements HandlerOperation {
             mojo.analyseCrunchClasses(() -> false, visitor);
         } finally {
             var newTime = System.currentTimeMillis();
-            mojo.getLog().info("Test analysis completed in " + (newTime - time) + " msecs");
-            mojo.getLog().info("Assertion types in use: " + visitor.assertionTypes.stream().map(each ->
-                    each.displayValue).collect(joining(", ")));
+            mojo.getLog().info("Test analysis " + visitor.langStats + " completed in " + (newTime - time) + " msecs");
+            mojo.getLog().info("Assertion types in use: " + visitor.assertionTypes);
         }
     }
 
@@ -41,8 +41,10 @@ public class TestHandler implements HandlerOperation {
 
         private final EnumSet<CrunchTestValidationOverrides> classLevelOverrides = EnumSet.noneOf(CrunchTestValidationOverrides.class);
 
-        private final EnumSet<AssertionType> assertionTypes = EnumSet.noneOf(AssertionType.class);
+        private final Multiset<AssertionType> assertionTypes = EnumMultiset.create(AssertionType.class);
         private boolean shownKotlinAssertJMigrateWarning;
+
+        private final Multiset<LanguageType> langStats = EnumMultiset.create(LanguageType.class);
 
         private boolean isMethodPublic;
         private boolean isMethodPrivate;
@@ -93,21 +95,23 @@ public class TestHandler implements HandlerOperation {
                 this.foundJUnit5 |= gotJUnit5;
 
                 if (isKotlin) {
-                    mojo.getLog().info("Kotlin Test: " + className + " : " + name);
+//                    mojo.getLog().debug("Kotlin Test: " + className + " : " + name);
+                    this.langStats.add(LanguageType.Kotlin);
                 } else {
-                    mojo.getLog().info("Java Test: " + className + " : " + name);
+//                    mojo.getLog().debug("Java Test: " + className + " : " + name);
+                    this.langStats.add(LanguageType.Java);
                 }
 
-                if (this.assertionTypes.contains(AssertionType.JUNIT4)) {
+                if (this.assertionTypes.contains(AssertionType.JUnit4)) {
                     handleViolation(JUNIT4_ASSERTIONS, () -> "We should stop using JUnit4 assertions");
                 }
 
-                if (this.assertionTypes.contains(AssertionType.HAMCREST)) {
+                if (this.assertionTypes.contains(AssertionType.Hamcrest)) {
                     handleViolation(HAMCREST_USAGE, () -> "We should stop using Hamcrest");
                 }
 
                 if (isKotlin) {
-                    if (this.assertionTypes.contains(AssertionType.ASSERTJ) && !this.shownKotlinAssertJMigrateWarning) {
+                    if (this.assertionTypes.contains(AssertionType.AssertJ) && !this.shownKotlinAssertJMigrateWarning) {
                         mojo.getLog().warn("Kotlin tests ought to start moving from AssertJ => Strikt, where possible");
                         this.shownKotlinAssertJMigrateWarning = true;
                     }
@@ -158,31 +162,29 @@ public class TestHandler implements HandlerOperation {
         public void visitMethodCall(String className, String owner, String name, String desc) {
 
             if (owner.equals("org/junit/Assert")) {
-                this.assertionTypes.add(AssertionType.JUNIT4);
+                this.assertionTypes.add(AssertionType.JUnit4);
             }
 
             if (owner.startsWith("org/hamcrest/MatcherAssert")) {
-                this.assertionTypes.add(AssertionType.HAMCREST);
+                this.assertionTypes.add(AssertionType.Hamcrest);
             }
 
             if (owner.startsWith("strikt/api")) {
-                this.assertionTypes.add(AssertionType.STRIKT);
+                this.assertionTypes.add(AssertionType.Strikt);
             }
 
             if (owner.startsWith("org/assertj")) {
-                this.assertionTypes.add(AssertionType.ASSERTJ);
+                this.assertionTypes.add(AssertionType.AssertJ);
             }
         }
     }
 
     private enum AssertionType {
-        HAMCREST("Hamcrest"), ASSERTJ("AssertJ"), JUNIT4("JUnit4"), STRIKT("Strikt");
+        Hamcrest, AssertJ, JUnit4, Strikt
+    }
 
-        final String displayValue;
-
-        AssertionType(String displayValue) {
-            this.displayValue = displayValue;
-        }
+    private enum LanguageType {
+        Java, Kotlin
     }
 
     private static String displayClassName(String className) {

@@ -52,7 +52,6 @@ public class AsmUtils {
                         public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
 
                             final Map<String, List<Object>> annotationValues = new LinkedHashMap<>();
-                            final String[] currentArrayName = {""};
 
                             return new AnnotationVisitor(API_VERSION) {
                                 @Override
@@ -64,8 +63,6 @@ public class AsmUtils {
 
                                 @Override
                                 public AnnotationVisitor visitArray(final String arrayName) {
-
-                                    currentArrayName[0] = arrayName;
 
                                     return new AnnotationVisitor(API_VERSION) {
                                         @Override
