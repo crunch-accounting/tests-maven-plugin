@@ -56,6 +56,26 @@ public class AsmUtils {
                         }
 
                         @Override
+                        public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+                            // TODO Ensure this is actually a test class, e.g. not a helper / Utils
+
+                            ArrayList<String> annotationsForMethod = new ArrayList<>();
+
+                            return new FieldVisitor(API_VERSION) {
+                                @Override
+                                public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
+                                    annotationsForMethod.add(descriptor);
+                                    return null;  // TODO robust enough?
+                                }
+
+                                @Override
+                                public void visitEnd() {
+                                    System.out.println(className + ": " + name + " / " + descriptor + " : " + annotationsForMethod);
+                                }
+                            };
+                        }
+
+                        @Override
                         public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
 
                             final Map<String, List<Object>> annotationValues = new LinkedHashMap<>();
