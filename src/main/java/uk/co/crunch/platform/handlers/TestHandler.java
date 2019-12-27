@@ -9,8 +9,8 @@ import uk.co.crunch.platform.asm.*;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +21,7 @@ public class TestHandler implements HandlerOperation {
     @Override
     public void run(CrunchServiceMojo mojo) {
 
-        var visitor = new Vis(mojo);
+        var visitor = new TestsVisitor(mojo);
         var time = System.currentTimeMillis();
         try {
             mojo.analyseCrunchClasses(() -> false, visitor);
@@ -32,7 +32,7 @@ public class TestHandler implements HandlerOperation {
         }
     }
 
-    private static class Vis implements ClassDefinitionVisitor, ClassAnnotationVisitor, MethodAnnotationVisitor, MethodDefinitionVisitor, MethodCallVisitor {
+    private static class TestsVisitor implements ClassDefinitionVisitor, ClassAnnotationVisitor, MethodAnnotationVisitor, MethodDefinitionVisitor, MethodCallVisitor {
 
         private final CrunchServiceMojo mojo;
 
@@ -42,6 +42,9 @@ public class TestHandler implements HandlerOperation {
 
         private final EnumSet<CrunchTestValidationOverrides> classLevelOverrides = EnumSet.noneOf(CrunchTestValidationOverrides.class);
         private final EnumSet<CrunchTestValidationOverrides> classLevelOverrideWarningShown = EnumSet.noneOf(CrunchTestValidationOverrides.class);
+
+        private List<String> publicTestMethodsPerClass = new ArrayList<>();
+        private List<String> testPrefixMethodsPerClass = new ArrayList<>();
 
         private final Multiset<AssertionType> assertionTypes = EnumMultiset.create(AssertionType.class);
         private boolean shownKotlinAssertJMigrateWarning;
@@ -54,13 +57,15 @@ public class TestHandler implements HandlerOperation {
         private boolean isClassPublic;
         private boolean shownClassPublicWarning;
 
-        public Vis(CrunchServiceMojo mojo) {
+        public TestsVisitor(CrunchServiceMojo mojo) {
             this.mojo = mojo;
         }
 
         @Override
         public void visitClass(int access, String name, String signature, String superName, String[] interfaces) {
             isClassPublic = ((access & Opcodes.ACC_PUBLIC) != 0);
+            this.publicTestMethodsPerClass.clear();
+            this.testPrefixMethodsPerClass.clear();
         }
 
         @Override
@@ -105,11 +110,11 @@ public class TestHandler implements HandlerOperation {
                 }
 
                 if (this.assertionTypes.contains(AssertionType.JUnit4)) {
-                    handleViolation(JUNIT4_ASSERTIONS, () -> "We should stop using JUnit4 assertions");
+                    handleViolation(JUNIT4_ASSERTIONS, () -> "We should stop using JUnit4 assertions (" + displayClassName(className) + "." + name + ")");
                 }
 
                 if (this.assertionTypes.contains(AssertionType.Hamcrest)) {
-                    handleViolation(HAMCREST_USAGE, () -> "We should stop using Hamcrest");
+                    handleViolation(HAMCREST_USAGE, () -> "We should stop using Hamcrest (" + displayClassName(className) + "." + name + ")");
                 }
 
                 if (isKotlin) {
@@ -125,8 +130,14 @@ public class TestHandler implements HandlerOperation {
                 }
 
                 // JUnit5 test methods don't need to be public (irrelevant for Kotlin)
-                if (!isKotlin && gotJUnit5 && isMethodPublic) {
-                    mojo.getLog().warn("Test `" + displayClassName(className) + "." + name + "` does not need to be public");
+                if (gotJUnit5) {
+                    if (!isKotlin && isMethodPublic) {
+                        this.publicTestMethodsPerClass.add(name);
+                    }
+
+                    if (name.startsWith("test")) {
+                        this.testPrefixMethodsPerClass.add(name);
+                    }
                 }
             }
         }
@@ -160,6 +171,19 @@ public class TestHandler implements HandlerOperation {
                 isMethodPublic = true;
             } else if ((access & Opcodes.ACC_PRIVATE) != 0) {
                 isMethodPrivate = true;
+            }
+        }
+
+        @Override
+        public void finishedVisitingClass(String className) {
+            if (!this.publicTestMethodsPerClass.isEmpty()) {
+                mojo.getLog().warn("Test class `" + displayClassName(className) + "`, methods: " + this.publicTestMethodsPerClass + " do not need to be public");
+                this.publicTestMethodsPerClass.clear();
+            }
+
+            if (!this.testPrefixMethodsPerClass.isEmpty()) {
+                mojo.getLog().warn("Test class `" + displayClassName(className) + "`, methods: " + this.testPrefixMethodsPerClass + " do not need the prefix 'test'");
+                this.testPrefixMethodsPerClass.clear();
             }
         }
 

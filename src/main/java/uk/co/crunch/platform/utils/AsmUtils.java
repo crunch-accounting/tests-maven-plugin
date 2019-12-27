@@ -49,6 +49,13 @@ public class AsmUtils {
                         }
 
                         @Override
+                        public void visitEnd() {
+                            for (ClassDefinitionVisitor handler : filterHandlers(ClassDefinitionVisitor.class, handlers).collect(toList())) {
+                                handler.finishedVisitingClass(className);
+                            }
+                        }
+
+                        @Override
                         public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
 
                             final Map<String, List<Object>> annotationValues = new LinkedHashMap<>();
