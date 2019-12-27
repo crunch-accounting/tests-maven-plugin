@@ -9,6 +9,7 @@ import uk.co.crunch.platform.asm.*;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -62,10 +63,14 @@ public class TestHandler implements HandlerOperation {
         }
 
         @Override
-        public void visitClass(int access, String name, String signature, String superName, String[] interfaces) {
-            isClassPublic = ((access & Opcodes.ACC_PUBLIC) != 0);
+        public void visitClass(int access, String className, String signature, String superName, String[] interfaces) {
+            this.isClassPublic = ((access & Opcodes.ACC_PUBLIC) != 0);
             this.publicTestMethodsPerClass.clear();
             this.testPrefixMethodsPerClass.clear();
+
+            if (className.endsWith("Test") && !(className.endsWith("UnitTest") || className.endsWith("IntegrationTest"))) {
+                mojo.getLog().warn("Unclassified test class `" + displayClassName(className) + "` should clarify whether it is a Unit or Integration test");
+            }
         }
 
         @Override
@@ -217,6 +222,6 @@ public class TestHandler implements HandlerOperation {
     }
 
     private static String displayClassName(String className) {
-        return StringUtils.stripEnd(className, ".class");
+        return StringUtils.stripEnd(className, ".class").replace(File.separatorChar, '.');
     }
 }
