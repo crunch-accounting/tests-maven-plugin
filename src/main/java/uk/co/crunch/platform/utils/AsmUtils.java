@@ -70,7 +70,7 @@ public class AsmUtils {
 
                                 @Override
                                 public void visitEnd() {
-                                    System.out.println(className + ": " + name + " / " + descriptor + " : " + annotationsForMethod);
+                                    // System.out.println(className + ": " + name + " / " + descriptor + " : " + annotationsForMethod);
                                 }
                             };
                         }

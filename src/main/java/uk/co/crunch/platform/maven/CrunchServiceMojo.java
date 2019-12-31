@@ -1,12 +1,25 @@
 package uk.co.crunch.platform.maven;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenResourcesFiltering;
 import org.jtwig.JtwigModel;
@@ -19,28 +32,14 @@ import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
 import uk.co.crunch.platform.handlers.HandlerOperation;
 import uk.co.crunch.platform.handlers.TestHandler;
 import uk.co.crunch.platform.utils.AsmUtils;
-import uk.co.crunch.platform.utils.FileUtils;
-import uk.co.crunch.platform.utils.MojoUtils;
-import uk.co.crunch.platform.utils.SpringBootUtils;
-
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.function.Predicate;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Mojo(
-        name = "generate",
-        defaultPhase = LifecyclePhase.TEST_COMPILE,
-        requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM,
-        threadSafe = true)
+    name = "generate",
+    defaultPhase = LifecyclePhase.TEST_COMPILE,
+    requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM,
+    threadSafe = true)
 public class CrunchServiceMojo
-        extends AbstractMojo {
+    extends AbstractMojo {
 
     /**
      * The character encoding scheme to be applied when filtering resources.
@@ -73,7 +72,7 @@ public class CrunchServiceMojo
     public List<HandlerOperation> defaultHandlers() {
         final List<HandlerOperation> operations = new ArrayList<>();
 
-        operations.add(new TestHandler());
+        operations.add(new TestHandler(this.getLog(), System::currentTimeMillis));
 
         return operations;
     }
@@ -84,15 +83,9 @@ public class CrunchServiceMojo
 
     public void execute(List<HandlerOperation> operations) {
 
-        model.with("serviceName", getServiceName())
-                .with("serviceNameCamel", getServiceNameUpperCamel());
+        model.with("serviceName", getServiceName());
 
         state.setDataModel(model);
-
-        this.getMetadataModel().with("bootstrap_content", "n/a")
-                .with("mysql_schema", "n/a")
-                .with("mysql_diagram_links", "`n/a`")
-                .with("rabbit_permissions", "n/a");
 
         operations.forEach(each -> each.run(this));
     }
@@ -103,41 +96,6 @@ public class CrunchServiceMojo
 
     public String getServiceName() {
         return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, getServiceNameUpperCase());
-    }
-
-    private String getServiceNameUpperCamel() {
-        return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, getServiceNameUpperCase());
-    }
-
-    public String getApplicationName() {
-        if (acquiredApplicationName == null) {
-            // Bit iffy, but seems to work fine
-            final File mainResourcesBaseDir = MojoUtils.pickResourcesDirectory(project.getResources());
-
-            getLog().info("Looking for application name in: " + FileUtils.getFriendlyFileName(mainResourcesBaseDir));
-
-            try {
-                try (InputStream is = new FileInputStream(new File(mainResourcesBaseDir, "application.properties"))) {
-                    final Properties appProps = new Properties();
-                    appProps.load(is);
-
-                    // Must trust this, if set
-                    acquiredApplicationName = appProps.getProperty("spring.application.name");
-
-                    if (isNullOrEmpty(acquiredApplicationName)) {
-                        acquiredApplicationName = SpringBootUtils.getContextPathProperty(appProps).replace("/", "").replace("-service", "");
-                    }
-                }
-            } catch (FileNotFoundException e) {
-                // Should really fail compile, given that only the Config Server is really affected!
-                getLog().error("Bootstrap Generation: could not find an application.properties (application.y?ml not yet supported)");
-                return acquiredApplicationName;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return acquiredApplicationName;
     }
 
     public List<String> getTestClasspathElementsList() {
@@ -175,9 +133,9 @@ public class CrunchServiceMojo
     public Reflections getReflectionsForAnnotations() {
         if (reflectionsForAnnotations == null) {
             reflectionsForAnnotations = new Reflections("uk.co.crunch", getTestClassLoader(),
-                    new SubTypesScanner(),
-                    new TypeAnnotationsScanner(),
-                    new MethodAnnotationsScanner());
+                new SubTypesScanner(),
+                new TypeAnnotationsScanner(),
+                new MethodAnnotationsScanner());
         }
         return reflectionsForAnnotations;
     }

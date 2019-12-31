@@ -3,13 +3,16 @@ package uk.co.crunch.platform.handlers;
 import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.Multiset;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.plugin.logging.Log;
 import org.objectweb.asm.Opcodes;
 import uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides;
 import uk.co.crunch.platform.asm.*;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
+import uk.co.crunch.platform.utils.InstantTimer;
 
 import java.io.File;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -19,23 +22,32 @@ import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.*;
 
 public class TestHandler implements HandlerOperation {
+
+    private final Log logger;
+    private final InstantTimer timer;
+
+    public TestHandler(Log logger, InstantTimer timer) {
+        this.logger = logger;
+        this.timer = timer;
+    }
+
     @Override
     public void run(CrunchServiceMojo mojo) {
 
-        var visitor = new TestsVisitor(mojo);
-        var time = System.currentTimeMillis();
+        var visitor = new TestsVisitor(this.logger);
+        var time = this.timer.currentTimeMillis();
         try {
             mojo.analyseCrunchClasses(() -> false, visitor);
         } finally {
-            var newTime = System.currentTimeMillis();
-            mojo.getLog().info("Test analysis " + visitor.langStats + " completed in " + (newTime - time) + " msecs");
-            mojo.getLog().info("Assertion types in use: " + visitor.assertionTypes);
+            var newTime = this.timer.currentTimeMillis();
+            this.logger.info("Test analysis " + visitor.langStats + " completed in " + (newTime - time) + " msecs");
+            this.logger.info("Assertion types in use: " + visitor.assertionTypes);
         }
     }
 
     private static class TestsVisitor implements ClassDefinitionVisitor, ClassAnnotationVisitor, MethodAnnotationVisitor, MethodDefinitionVisitor, MethodCallVisitor {
 
-        private final CrunchServiceMojo mojo;
+        private final Log logger;
 
         private boolean isKotlin;
         private boolean foundJUnit4;
@@ -58,8 +70,8 @@ public class TestHandler implements HandlerOperation {
         private boolean isClassPublic;
         private boolean shownClassPublicWarning;
 
-        public TestsVisitor(CrunchServiceMojo mojo) {
-            this.mojo = mojo;
+        public TestsVisitor(Log logger) {
+            this.logger = logger;
         }
 
         @Override
@@ -68,8 +80,10 @@ public class TestHandler implements HandlerOperation {
             this.publicTestMethodsPerClass.clear();
             this.testPrefixMethodsPerClass.clear();
 
+            this.assertionTypes.clear();
+
             if (className.endsWith("Test") && !(className.endsWith("UnitTest") || className.endsWith("IntegrationTest"))) {
-                mojo.getLog().warn("Unclassified test class `" + displayClassName(className) + "` should clarify whether it is a Unit or Integration test");
+                this.logger.warn("Unclassified test class `" + displayClassName(className) + "` should clarify whether it is a Unit or Integration test");
             }
         }
 
@@ -107,30 +121,22 @@ public class TestHandler implements HandlerOperation {
                 this.foundJUnit5 |= gotJUnit5;
 
                 if (isKotlin) {
-//                    mojo.getLog().debug("Kotlin Test: " + className + " : " + name);
+//                    this.logger.debug("Kotlin Test: " + className + " : " + name);
                     this.langStats.add(LanguageType.Kotlin);
                 } else {
-//                    mojo.getLog().debug("Java Test: " + className + " : " + name);
+//                    this.logger.debug("Java Test: " + className + " : " + name);
                     this.langStats.add(LanguageType.Java);
-                }
-
-                if (this.assertionTypes.contains(AssertionType.JUnit4)) {
-                    handleViolation(JUNIT4_ASSERTIONS, () -> "We should stop using JUnit4 assertions (" + displayClassName(className) + "." + name + ")");
-                }
-
-                if (this.assertionTypes.contains(AssertionType.Hamcrest)) {
-                    handleViolation(HAMCREST_USAGE, () -> "We should stop using Hamcrest (" + displayClassName(className) + "." + name + ")");
                 }
 
                 if (isKotlin) {
                     if (this.assertionTypes.contains(AssertionType.AssertJ) && !this.shownKotlinAssertJMigrateWarning) {
-                        mojo.getLog().warn("Kotlin tests ought to start moving from AssertJ => Strikt, where possible");
+                        this.logger.warn("Kotlin tests ought to start moving from AssertJ => Strikt, where possible");
                         this.shownKotlinAssertJMigrateWarning = true;
                     }
                 }
 
                 if (!this.shownClassPublicWarning && isClassPublic && !isKotlin) {
-                    mojo.getLog().warn("Java test class `" + displayClassName(className) + "` does not need to be public");
+                    this.logger.warn("Java test class `" + displayClassName(className) + "` does not need to be public");
                     this.shownClassPublicWarning = true;
                 }
 
@@ -147,10 +153,54 @@ public class TestHandler implements HandlerOperation {
             }
         }
 
+        @Override
+        public void visitMethodCall(String className, String owner, String name, String desc) {
+
+            if (owner.equals("org/junit/Assert")) {
+                this.assertionTypes.add(AssertionType.JUnit4);
+            }
+
+            if (owner.equals("junit/framework/TestCase")) {
+                this.assertionTypes.add(AssertionType.JUnit3);
+            }
+
+            if (owner.equals("org/junit/jupiter/api/Assertions")) {
+                this.assertionTypes.add(AssertionType.JUnit5);
+            }
+
+            if (owner.startsWith("org/hamcrest/MatcherAssert")) {
+                this.assertionTypes.add(AssertionType.Hamcrest);
+            }
+
+            if (owner.startsWith("strikt/api")) {
+                this.assertionTypes.add(AssertionType.Strikt);
+            }
+
+            if (owner.startsWith("org/assertj")) {
+                this.assertionTypes.add(AssertionType.AssertJ);
+            }
+
+            if (this.assertionTypes.contains(AssertionType.JUnit3)) {
+                handleViolation(JUNIT3_ASSERTIONS, () -> "We should stop using JUnit3 assertions (" + displayClassName(className) + "." + name + ")");
+            }
+
+            if (this.assertionTypes.contains(AssertionType.JUnit4)) {
+                handleViolation(JUNIT4_ASSERTIONS, () -> "We should stop using JUnit4 assertions (" + displayClassName(className) + "." + name + ")");
+            }
+
+            if (this.assertionTypes.contains(AssertionType.JUnit5)) {
+                handleViolation(JUNIT5_ASSERTIONS, () -> "We should stop using JUnit5 assertions (" + displayClassName(className) + "." + name + ")");
+            }
+
+            if (this.assertionTypes.contains(AssertionType.Hamcrest)) {
+                handleViolation(HAMCREST_USAGE, () -> "We should stop using Hamcrest (" + displayClassName(className) + "." + name + ")");
+            }
+        }
+
         private void handleViolation(CrunchTestValidationOverrides override, ViolationHandler handler) {
             if (isOverridden(override)) {
                 if (!this.classLevelOverrideWarningShown.contains(override)) {
-                    mojo.getLog().warn(handler.getMessage());
+                    this.logger.warn(handler.getMessage());
                     this.classLevelOverrideWarningShown.add(override);
                 }
             } else {
@@ -182,39 +232,19 @@ public class TestHandler implements HandlerOperation {
         @Override
         public void finishedVisitingClass(String className) {
             if (!this.publicTestMethodsPerClass.isEmpty()) {
-                mojo.getLog().warn("Test class `" + displayClassName(className) + "`, methods: " + this.publicTestMethodsPerClass + " do not need to be public");
+                this.logger.warn("Test class `" + displayClassName(className) + "`, methods: " + this.publicTestMethodsPerClass + " do not need to be public");
                 this.publicTestMethodsPerClass.clear();
             }
 
             if (!this.testPrefixMethodsPerClass.isEmpty()) {
-                mojo.getLog().warn("Test class `" + displayClassName(className) + "`, methods: " + this.testPrefixMethodsPerClass + " do not need the prefix 'test'");
+                this.logger.warn("Test class `" + displayClassName(className) + "`, methods: " + this.testPrefixMethodsPerClass + " do not need the prefix 'test'");
                 this.testPrefixMethodsPerClass.clear();
-            }
-        }
-
-        @Override
-        public void visitMethodCall(String className, String owner, String name, String desc) {
-
-            if (owner.equals("org/junit/Assert")) {
-                this.assertionTypes.add(AssertionType.JUnit4);
-            }
-
-            if (owner.startsWith("org/hamcrest/MatcherAssert")) {
-                this.assertionTypes.add(AssertionType.Hamcrest);
-            }
-
-            if (owner.startsWith("strikt/api")) {
-                this.assertionTypes.add(AssertionType.Strikt);
-            }
-
-            if (owner.startsWith("org/assertj")) {
-                this.assertionTypes.add(AssertionType.AssertJ);
             }
         }
     }
 
     private enum AssertionType {
-        Hamcrest, AssertJ, JUnit4, Strikt
+        Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5, Strikt
     }
 
     private enum LanguageType {
