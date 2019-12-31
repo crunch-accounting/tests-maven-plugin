@@ -88,8 +88,6 @@ public class TestHandler implements HandlerOperation {
             this.publicTestMethodsPerClass.clear();
             this.testPrefixMethodsPerClass.clear();
 
-            this.assertionTypes.clear();
-
             if (className.endsWith("Test") && !(className.endsWith("UnitTest") || className.endsWith("IntegrationTest"))) {
                 this.logger.warn("Unclassified test class `" + displayClassName(className) + "` should clarify whether it is a Unit or Integration test");
             }
