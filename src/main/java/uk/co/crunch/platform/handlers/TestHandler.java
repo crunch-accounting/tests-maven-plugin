@@ -166,40 +166,29 @@ public class TestHandler implements HandlerOperation {
 
             if (owner.equals("org/junit/Assert")) {
                 this.assertionTypes.add(AssertionType.JUnit4);
+                handleViolation(JUNIT4_ASSERTIONS, () -> "We should stop using JUnit4 assertions (" + displayClassName(className) + "." + name + ")");
             } else if (owner.equals("junit/framework/TestCase")) {
                 this.assertionTypes.add(AssertionType.JUnit3);
+                handleViolation(JUNIT3_ASSERTIONS, () -> "We should stop using JUnit3 assertions (" + displayClassName(className) + "." + name + ")");
             } else if (owner.equals("org/junit/jupiter/api/Assertions")) {
                 this.assertionTypes.add(AssertionType.JUnit5);
-            } else if (owner.startsWith("org/hamcrest/MatcherAssert")) {
-                this.assertionTypes.add(AssertionType.Hamcrest);
-            } else if (owner.startsWith("strikt/api")) {
-                this.assertionTypes.add(AssertionType.Strikt);
-            } else if (owner.startsWith("org/assertj/core/api/Assertions")) {
-                this.assertionTypes.add(AssertionType.AssertJ);
-            }
 
-            if (this.assertionTypes.contains(AssertionType.JUnit3)) {
-                handleViolation(JUNIT3_ASSERTIONS, () -> "We should stop using JUnit3 assertions (" + displayClassName(className) + "." + name + ")");
-            }
-
-            if (this.assertionTypes.contains(AssertionType.JUnit4)) {
-                handleViolation(JUNIT4_ASSERTIONS, () -> "We should stop using JUnit4 assertions (" + displayClassName(className) + "." + name + ")");
-            }
-
-            if (this.assertionTypes.contains(AssertionType.JUnit5)) {
                 if (name.equals("assertThrows")) {
                     if (!this.shownAssertThrowsWarning) {
                         this.logger.info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
                         this.shownAssertThrowsWarning = true;
                     }
-                }
-                else {
+                } else {
                     handleViolation(JUNIT5_ASSERTIONS, () -> "We should stop using JUnit5 assertions (" + displayClassName(className) + "." + name + ")");
                 }
-            }
 
-            if (this.assertionTypes.contains(AssertionType.Hamcrest)) {
+            } else if (owner.startsWith("org/hamcrest/MatcherAssert")) {
+                this.assertionTypes.add(AssertionType.Hamcrest);
                 handleViolation(HAMCREST_USAGE, () -> "We should stop using Hamcrest (" + displayClassName(className) + "." + name + ")");
+            } else if (owner.startsWith("strikt/api")) {
+                this.assertionTypes.add(AssertionType.Strikt);
+            } else if (owner.startsWith("org/assertj/core/api/Assertions")) {
+                this.assertionTypes.add(AssertionType.AssertJ);
             }
         }
 
