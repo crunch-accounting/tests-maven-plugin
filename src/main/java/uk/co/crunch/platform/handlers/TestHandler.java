@@ -221,9 +221,10 @@ public class TestHandler implements HandlerOperation {
 
             if ((access & Opcodes.ACC_PUBLIC) != 0) {
                 isMethodPublic = true;
-            } else if ((access & Opcodes.ACC_PRIVATE) != 0) {
-                isMethodPrivate = true;
             }
+//            else if ((access & Opcodes.ACC_PRIVATE) != 0) {
+//                isMethodPrivate = true;
+//            }
         }
 
         @Override
