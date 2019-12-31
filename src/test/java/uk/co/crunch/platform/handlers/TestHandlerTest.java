@@ -96,6 +96,20 @@ public class TestHandlerTest {
     }
 
     @Test
+    public void testKotlinJUnit5() throws Exception {
+        try {
+            runConfig("KotlinJUnit5TestPom");
+            fail();
+        } catch (CrunchRuleViolationException e) {
+            assertThat(e.getMessage()).isEqualTo("CrunchRuleViolationException: We should stop using JUnit5 assertions (KotlinJUnit5Assert.assertEquals)");
+        }
+
+        verify(this.logger).info("Test analysis [Kotlin] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [JUnit5]");
+        verifyNoMoreInteractions(this.logger);
+    }
+
+    @Test
     public void testJUnit5PublicClass() throws Exception {
         try {
             runConfig("JUnit5PublicClassTestPom");
