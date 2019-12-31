@@ -146,6 +146,33 @@ public class TestHandlerTest {
         verifyNoMoreInteractions(this.logger);
     }
 
+    @Test
+    public void testAll() throws Exception {
+        mojoForPom("AllTestsPom").execute(List.of(new TestHandler(this.logger, () -> 0L, true)));
+
+        verify(this.logger).warn("We should stop using Hamcrest (HamcrestAssert.assertThat)");
+        verify(this.logger).warn("We should stop using JUnit3 assertions (JUnit3Assert.assertEquals)");
+        verify(this.logger).warn("We should stop using JUnit4 assertions (JUnit4Assert.assertEquals)");
+        verify(this.logger).warn("We should stop using JUnit5 assertions (JUnit5Assert.assertEquals)");
+
+        verify(this.logger).warn("Test class `HamcrestAssert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Test class `JUnit3Assert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Test class `JUnit4Assert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Test class `JUnit5Assert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Test class `JUnit5PublicAssert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need to be public");
+        verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Test class `KotlinJUnit5Assert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Java test class `JUnit5PublicAssert` does not need to be public");
+
+        verify(this.logger).info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
+        verify(this.logger).warn("Kotlin tests ought to start moving from AssertJ => Strikt, where possible");
+
+        verify(this.logger).info("Test analysis [Java x 7, Kotlin] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5 x 5]");
+        verifyNoMoreInteractions(this.logger);
+    }
+
     private void runConfig(String configName) throws Exception {
         mojoForPom(configName).execute(List.of(new TestHandler(this.logger, () -> 0L, false)));
     }
