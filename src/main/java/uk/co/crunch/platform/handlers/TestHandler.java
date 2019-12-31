@@ -68,6 +68,7 @@ public class TestHandler implements HandlerOperation {
 
         private final Multiset<AssertionType> assertionTypes = EnumMultiset.create(AssertionType.class);
         private boolean shownKotlinAssertJMigrateWarning;
+        private boolean shownAssertThrowsWarning;
 
         private final Multiset<LanguageType> langStats = EnumMultiset.create(LanguageType.class);
 
@@ -186,7 +187,15 @@ public class TestHandler implements HandlerOperation {
             }
 
             if (this.assertionTypes.contains(AssertionType.JUnit5)) {
-                handleViolation(JUNIT5_ASSERTIONS, () -> "We should stop using JUnit5 assertions (" + displayClassName(className) + "." + name + ")");
+                if (name.equals("assertThrows")) {
+                    if (!this.shownAssertThrowsWarning) {
+                        this.logger.info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
+                        this.shownAssertThrowsWarning = true;
+                    }
+                }
+                else {
+                    handleViolation(JUNIT5_ASSERTIONS, () -> "We should stop using JUnit5 assertions (" + displayClassName(className) + "." + name + ")");
+                }
             }
 
             if (this.assertionTypes.contains(AssertionType.Hamcrest)) {

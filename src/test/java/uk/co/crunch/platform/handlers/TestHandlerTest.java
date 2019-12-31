@@ -137,11 +137,12 @@ public class TestHandlerTest {
     public void testJUnit5PublicMethodWithMatchingOverride() throws Exception {
         runConfig("JUnit5PublicMethodTestPom");
 
+        verify(this.logger).info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
         verify(this.logger).warn("We should stop using JUnit5 assertions (JUnit5PublicMethodAssert.assertEquals)");
         verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need to be public");
         verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).info("Test analysis [Java] completed in 0 msecs");
-        verify(this.logger).info("Assertion types in use: [JUnit5]");
+        verify(this.logger).info("Assertion types in use: [JUnit5 x 2]");
         verifyNoMoreInteractions(this.logger);
     }
 
