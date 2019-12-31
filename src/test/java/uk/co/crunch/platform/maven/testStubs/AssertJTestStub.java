@@ -1,20 +1,20 @@
 package uk.co.crunch.platform.maven.testStubs;
 
-import uk.co.crunch.platform.maven.NonNullableMavenProjectStub;
-
 import java.util.List;
+
+import uk.co.crunch.platform.maven.NonNullableMavenProjectStub;
 
 import static java.util.List.of;
 
 @SuppressWarnings("ConstantConditions")
-public class JUnit3TestStub extends NonNullableMavenProjectStub {
+public class AssertJTestStub extends NonNullableMavenProjectStub {
 
-    public JUnit3TestStub() {
+    public AssertJTestStub() {
         setArtifactId("test-service-" + System.nanoTime());
     }
 
     @Override
     public List<String> getTestClasspathElements() {
-        return of(getClass().getClassLoader().getResource("uk/co/crunch/samples/junit3").getFile());
+        return of(getClass().getClassLoader().getResource("uk/co/crunch/samples/assertj").getFile());
     }
 }

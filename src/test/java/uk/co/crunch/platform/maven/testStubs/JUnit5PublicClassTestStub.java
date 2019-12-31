@@ -6,6 +6,7 @@ import uk.co.crunch.platform.maven.NonNullableMavenProjectStub;
 
 import static java.util.List.of;
 
+@SuppressWarnings("ConstantConditions")
 public class JUnit5PublicClassTestStub extends NonNullableMavenProjectStub {
 
     public JUnit5PublicClassTestStub() {

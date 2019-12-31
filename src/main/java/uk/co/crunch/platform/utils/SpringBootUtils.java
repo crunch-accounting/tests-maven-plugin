@@ -1,46 +1,15 @@
 package uk.co.crunch.platform.utils;
 
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
-import uk.co.crunch.platform.maven.CrunchServiceMojo;
-import uk.co.crunch.platform.yaml.YamlInstanceFactory;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Optional.of;
 
 public class SpringBootUtils {
-
-    public static Optional<String> determineContextPath(CrunchServiceMojo mojo) {
-        final File resDir = /* main */ MojoUtils.pickResourcesDirectory(mojo.getProject().getResources());
-
-        try {
-            try (InputStream is = new FileInputStream(new File(resDir, "application.properties"))) {
-                final Properties appProps = new Properties();
-                appProps.load(is);
-
-                return of(getContextPathProperty(appProps).replace("/", ""));
-            }
-        } catch (IOException e) {
-            try {
-                try (InputStream is = new FileInputStream(new File(resDir, "application.yml"))) {
-                    final Map<String, Map<String, String>> yaml = YamlInstanceFactory.create().loadAs(is, Map.class);
-
-                    return of(getContextPathProperty(yaml).replace("/", ""));
-                }
-            } catch (IOException yamlEx) {
-                return Optional.empty();
-            }
-        }
-    }
 
     public static String getContextPathProperty(final Properties appProps) {
         final String first = appProps.getProperty("server.context-path");
@@ -75,8 +44,8 @@ public class SpringBootUtils {
     public static String getSpringBootVersion(final MavenProject project) {
         for (Artifact each : project.getArtifacts()) {
             if (each.getGroupId().equals("org.springframework.boot") &&
-                    each.getArtifactId().equals("spring-boot") &&
-                    !each.getScope().equals("test")) {
+                each.getArtifactId().equals("spring-boot") &&
+                !each.getScope().equals("test")) {
                 return each.getVersion();
             }
         }

@@ -1,5 +1,8 @@
 package uk.co.crunch.platform.handlers;
 
+import java.io.File;
+import java.util.List;
+
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.junit.Before;
@@ -9,9 +12,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
-
-import java.io.File;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -106,6 +106,15 @@ public class TestHandlerTest {
 
         verify(this.logger).info("Test analysis [Kotlin] completed in 0 msecs");
         verify(this.logger).info("Assertion types in use: [JUnit5]");
+        verifyNoMoreInteractions(this.logger);
+    }
+
+    @Test
+    public void testAssertJ() throws Exception {
+        runConfig("AssertJTestPom");
+
+        verify(this.logger).info("Test analysis [Java] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [AssertJ]");
         verifyNoMoreInteractions(this.logger);
     }
 

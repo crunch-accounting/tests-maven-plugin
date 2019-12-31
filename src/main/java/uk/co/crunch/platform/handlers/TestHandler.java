@@ -1,25 +1,32 @@
 package uk.co.crunch.platform.handlers;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.EnumMultiset;
 import com.google.common.collect.Multiset;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.objectweb.asm.Opcodes;
 import uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides;
-import uk.co.crunch.platform.asm.*;
+import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
+import uk.co.crunch.platform.asm.ClassDefinitionVisitor;
+import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
+import uk.co.crunch.platform.asm.MethodCallVisitor;
+import uk.co.crunch.platform.asm.MethodDefinitionVisitor;
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException;
 import uk.co.crunch.platform.maven.CrunchServiceMojo;
 import uk.co.crunch.platform.utils.InstantTimer;
 
-import java.io.File;
-import java.time.Clock;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
-import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.*;
+import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.HAMCREST_USAGE;
+import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.JUNIT3_ASSERTIONS;
+import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.JUNIT4_ASSERTIONS;
+import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.JUNIT5_ASSERTIONS;
+import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.MIXED_JUNIT4_JUNIT5;
 
 public class TestHandler implements HandlerOperation {
 
@@ -56,8 +63,8 @@ public class TestHandler implements HandlerOperation {
         private final EnumSet<CrunchTestValidationOverrides> classLevelOverrides = EnumSet.noneOf(CrunchTestValidationOverrides.class);
         private final EnumSet<CrunchTestValidationOverrides> classLevelOverrideWarningShown = EnumSet.noneOf(CrunchTestValidationOverrides.class);
 
-        private List<String> publicTestMethodsPerClass = new ArrayList<>();
-        private List<String> testPrefixMethodsPerClass = new ArrayList<>();
+        private final List<String> publicTestMethodsPerClass = new ArrayList<>();
+        private final List<String> testPrefixMethodsPerClass = new ArrayList<>();
 
         private final Multiset<AssertionType> assertionTypes = EnumMultiset.create(AssertionType.class);
         private boolean shownKotlinAssertJMigrateWarning;
@@ -95,7 +102,7 @@ public class TestHandler implements HandlerOperation {
 
             if (descriptor.endsWith("CrunchTestValidationOverride" + ";")) {
                 annotationValues.get("value").forEach(name ->
-                        this.classLevelOverrides.add(CrunchTestValidationOverrides.valueOf(substringAfterLast((String) name, "."))));
+                    this.classLevelOverrides.add(CrunchTestValidationOverrides.valueOf(substringAfterLast((String) name, "."))));
             }
         }
 
@@ -158,25 +165,15 @@ public class TestHandler implements HandlerOperation {
 
             if (owner.equals("org/junit/Assert")) {
                 this.assertionTypes.add(AssertionType.JUnit4);
-            }
-
-            if (owner.equals("junit/framework/TestCase")) {
+            } else if (owner.equals("junit/framework/TestCase")) {
                 this.assertionTypes.add(AssertionType.JUnit3);
-            }
-
-            if (owner.equals("org/junit/jupiter/api/Assertions")) {
+            } else if (owner.equals("org/junit/jupiter/api/Assertions")) {
                 this.assertionTypes.add(AssertionType.JUnit5);
-            }
-
-            if (owner.startsWith("org/hamcrest/MatcherAssert")) {
+            } else if (owner.startsWith("org/hamcrest/MatcherAssert")) {
                 this.assertionTypes.add(AssertionType.Hamcrest);
-            }
-
-            if (owner.startsWith("strikt/api")) {
+            } else if (owner.startsWith("strikt/api")) {
                 this.assertionTypes.add(AssertionType.Strikt);
-            }
-
-            if (owner.startsWith("org/assertj")) {
+            } else if (owner.startsWith("org/assertj/core/api/Assertions")) {
                 this.assertionTypes.add(AssertionType.AssertJ);
             }
 
