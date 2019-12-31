@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mvn.version>3.3.9</mvn.version>
         <jackson.version>2.10.1</jackson.version>
-        <crunch-services-plugin-api.version>2.3.3</crunch-services-plugin-api.version>
+        <crunch-services-plugin-api.version>2.3.4</crunch-services-plugin-api.version>
     </properties>
 
     <dependencies>
