@@ -32,16 +32,18 @@ public class TestHandler implements HandlerOperation {
 
     private final Log logger;
     private final InstantTimer timer;
+    private final boolean enableAllOverrides;
 
-    public TestHandler(Log logger, InstantTimer timer) {
+    public TestHandler(Log logger, InstantTimer timer, boolean enableAllOverrides) {
         this.logger = logger;
         this.timer = timer;
+        this.enableAllOverrides = enableAllOverrides;
     }
 
     @Override
     public void run(CrunchServiceMojo mojo) {
 
-        var visitor = new TestsVisitor(this.logger);
+        var visitor = new TestsVisitor(this.logger, this.enableAllOverrides);
         var time = this.timer.currentTimeMillis();
         try {
             mojo.analyseCrunchClasses(() -> false, visitor);
@@ -55,6 +57,7 @@ public class TestHandler implements HandlerOperation {
     private static class TestsVisitor implements ClassDefinitionVisitor, ClassAnnotationVisitor, MethodAnnotationVisitor, MethodDefinitionVisitor, MethodCallVisitor {
 
         private final Log logger;
+        private final boolean enableAllOverrides;
 
         private boolean isKotlin;
         private boolean foundJUnit4;
@@ -78,8 +81,9 @@ public class TestHandler implements HandlerOperation {
         private boolean isClassPublic;
         private boolean shownClassPublicWarning;
 
-        public TestsVisitor(Log logger) {
+        public TestsVisitor(Log logger, boolean enableAllOverrides) {
             this.logger = logger;
+            this.enableAllOverrides = enableAllOverrides;
         }
 
         @Override
@@ -191,7 +195,7 @@ public class TestHandler implements HandlerOperation {
         }
 
         private void handleViolation(CrunchTestValidationOverrides override, ViolationHandler handler) {
-            if (isOverridden(override)) {
+            if (this.enableAllOverrides || isOverridden(override)) {
                 if (!this.classLevelOverrideWarningShown.contains(override)) {
                     this.logger.warn(handler.getMessage());
                     this.classLevelOverrideWarningShown.add(override);

@@ -147,7 +147,7 @@ public class TestHandlerTest {
     }
 
     private void runConfig(String configName) throws Exception {
-        mojoForPom(configName).execute(List.of(new TestHandler(this.logger, () -> 0L)));
+        mojoForPom(configName).execute(List.of(new TestHandler(this.logger, () -> 0L, false)));
     }
 
     @SuppressWarnings("ConstantConditions")

@@ -72,7 +72,7 @@ public class CrunchServiceMojo
     public List<HandlerOperation> defaultHandlers() {
         final List<HandlerOperation> operations = new ArrayList<>();
 
-        operations.add(new TestHandler(this.getLog(), System::currentTimeMillis));
+        operations.add(new TestHandler(this.getLog(), System::currentTimeMillis, false));
 
         return operations;
     }
