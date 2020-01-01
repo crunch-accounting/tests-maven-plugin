@@ -145,7 +145,7 @@ public class TestHandler implements HandlerOperation {
                     }
                 }
 
-                if (!this.shownClassPublicWarning && isClassPublic && !isKotlin) {
+                if (!this.shownClassPublicWarning && isClassPublic && gotJUnit5 && !isKotlin) {
                     this.logger.warn("Java test class `" + displayClassName(className) + "` does not need to be public");
                     this.shownClassPublicWarning = true;
                 }

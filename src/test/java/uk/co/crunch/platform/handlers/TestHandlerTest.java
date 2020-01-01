@@ -54,12 +54,12 @@ public class TestHandlerTest {
     }
 
     @Test
-    public void testJUnit4() throws Exception {
+    public void testJUnit4AssertionsAndTest() throws Exception {
         try {
             runConfig("JUnit4TestPom");
             fail();
         } catch (CrunchRuleViolationException e) {
-            assertThat(e.getMessage()).isEqualTo("CrunchRuleViolationException: We should stop using JUnit4 assertions (JUnit4Assert.assertEquals)");
+            assertThat(e.getMessage()).isEqualTo("CrunchRuleViolationException: We should stop using JUnit4 assertions (JUnit4AssertAndTestUnitTest.assertEquals)");
         }
 
         verify(this.logger).info("Test analysis [Java] completed in 0 msecs");
@@ -150,14 +150,15 @@ public class TestHandlerTest {
     public void testAll() throws Exception {
         mojoForPom("AllTestsPom").execute(List.of(new TestHandler(this.logger, () -> 0L, true)));
 
+        verify(this.logger).warn("Cannot combine JUnit 4 and JUnit 5 tests! See: JUnit4AssertAndTestUnitTest.class");
+
         verify(this.logger).warn("We should stop using Hamcrest (HamcrestAssert.assertThat)");
         verify(this.logger).warn("We should stop using JUnit3 assertions (JUnit3Assert.assertEquals)");
-        verify(this.logger).warn("We should stop using JUnit4 assertions (JUnit4Assert.assertEquals)");
+        verify(this.logger).warn("We should stop using JUnit4 assertions (JUnit4AssertAndTestUnitTest.assertEquals)");
         verify(this.logger).warn("We should stop using JUnit5 assertions (JUnit5Assert.assertEquals)");
 
         verify(this.logger).warn("Test class `HamcrestAssert`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).warn("Test class `JUnit3Assert`, methods: [testA] do not need the prefix 'test'");
-        verify(this.logger).warn("Test class `JUnit4Assert`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).warn("Test class `JUnit5Assert`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).warn("Test class `JUnit5PublicAssert`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need to be public");

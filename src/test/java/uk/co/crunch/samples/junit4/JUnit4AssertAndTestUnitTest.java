@@ -1,14 +1,15 @@
 package uk.co.crunch.samples.junit4;
 
-import org.junit.jupiter.api.Test;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 
-class JUnit4Assert {
+public class JUnit4AssertAndTestUnitTest {
 
     @Test
-    void testA() {
+    public void testA() {
         assertEquals("Hi", "Hi");
     }
 }
