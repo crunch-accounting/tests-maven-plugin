@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import uk.co.crunch.platform.api.tests.CrunchTestValidationOverride;
 import uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -13,10 +14,15 @@ class JUnit5PublicMethodAssert {
     @Test
     public void testA() {
         assertEquals("Hi", "Hi");
-        assertThrows(RuntimeException.class, this::doSomething);
+        assertThrows(RuntimeException.class, this::doSomethingBad);
+        assertDoesNotThrow(this::doSomethingGood);
     }
 
-    private void doSomething() {
+    private void doSomethingBad() {
         throw new RuntimeException();
+    }
+
+    private void doSomethingGood() {
+        System.out.println("Good");
     }
 }

@@ -142,7 +142,7 @@ public class TestHandlerTest {
         verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need to be public");
         verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).info("Test analysis [Java] completed in 0 msecs");
-        verify(this.logger).info("Assertion types in use: [JUnit5 x 2]");
+        verify(this.logger).info("Assertion types in use: [JUnit5 x 3]");
         verifyNoMoreInteractions(this.logger);
     }
 
@@ -170,7 +170,7 @@ public class TestHandlerTest {
         verify(this.logger).warn("Kotlin tests ought to start moving from AssertJ => Strikt, where possible");
 
         verify(this.logger).info("Test analysis [Java x 7, Kotlin] completed in 0 msecs");
-        verify(this.logger).info("Assertion types in use: [Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5 x 5]");
+        verify(this.logger).info("Assertion types in use: [Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5 x 6]");
         verifyNoMoreInteractions(this.logger);
     }
 

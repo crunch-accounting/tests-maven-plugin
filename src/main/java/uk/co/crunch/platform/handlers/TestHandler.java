@@ -175,7 +175,7 @@ public class TestHandler implements HandlerOperation {
             } else if (owner.equals("org/junit/jupiter/api/Assertions")) {
                 this.assertionTypes.add(AssertionType.JUnit5);
 
-                if (name.equals("assertThrows")) {
+                if (name.equals("assertThrows") || name.equals("assertDoesNotThrow")) {
                     if (!this.shownAssertThrowsWarning) {
                         this.logger.info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
                         this.shownAssertThrowsWarning = true;
