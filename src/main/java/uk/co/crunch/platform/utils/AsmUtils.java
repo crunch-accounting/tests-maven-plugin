@@ -1,16 +1,32 @@
 package uk.co.crunch.platform.utils;
 
-import org.objectweb.asm.*;
-import uk.co.crunch.platform.asm.*;
-import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
+
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import uk.co.crunch.platform.TestType;
+import uk.co.crunch.platform.asm.AnnotatedFieldVisitor;
+import uk.co.crunch.platform.asm.AsmVisitor;
+import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
+import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
+import uk.co.crunch.platform.asm.ClassDefinitionVisitor;
+import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
+import uk.co.crunch.platform.asm.MethodCallVisitor;
+import uk.co.crunch.platform.asm.MethodDefinitionVisitor;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
@@ -31,13 +47,14 @@ public class AsmUtils {
 
         try (Stream<Path> classPathStream = Files.walk(classesDir.toPath())) {
             for (Path eachClass : classPathStream
-                    .filter(file -> file.toString().endsWith(".class") && file.toString().contains(CRUNCH_PACKAGE_PATH))
-                    .sorted()  // Seems to be issue with Maven 3.3.x vs Maven 3.5
-                    .collect(toList())) {
+                .filter(file -> file.toString().endsWith(".class") && file.toString().contains(CRUNCH_PACKAGE_PATH))
+                .sorted()  // Seems to be issue with Maven 3.3.x vs Maven 3.5
+                .collect(toList())) {
 
                 try (InputStream theStream = Files.newInputStream(eachClass)) {
 
-                    final String className = eachClass.getFileName().toString();
+                    var className = eachClass.getFileName().toString();
+                    var testType = className.endsWith("IntegrationTest.class") ? TestType.Integration : (className.endsWith("Test.class") ? TestType.Unit : TestType.Mixed);
 
                     new ClassReader(theStream).accept(new ClassVisitor(API_VERSION) {
 
@@ -51,7 +68,7 @@ public class AsmUtils {
                         @Override
                         public void visitEnd() {
                             for (ClassDefinitionVisitor handler : filterHandlers(ClassDefinitionVisitor.class, handlers).collect(toList())) {
-                                handler.finishedVisitingClass(className);
+                                handler.finishedVisitingClass(className, testType);
                             }
                         }
 
@@ -59,18 +76,20 @@ public class AsmUtils {
                         public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
                             // TODO Ensure this is actually a test class, e.g. not a helper / Utils
 
-                            ArrayList<String> annotationsForMethod = new ArrayList<>();
+                            var annotationsForField = new ArrayList<String>();
 
                             return new FieldVisitor(API_VERSION) {
                                 @Override
                                 public AnnotationVisitor visitAnnotation(final String descriptor, final boolean visible) {
-                                    annotationsForMethod.add(descriptor);
+                                    annotationsForField.add(descriptor);
                                     return null;  // TODO robust enough?
                                 }
 
                                 @Override
                                 public void visitEnd() {
-                                    // System.out.println(className + ": " + name + " / " + descriptor + " : " + annotationsForMethod);
+                                    for (AnnotatedFieldVisitor handler : filterHandlers(AnnotatedFieldVisitor.class, handlers).collect(toList())) {
+                                        handler.finishedVisitingField(className, testType, access, name, descriptor, signature, annotationsForField);
+                                    }
                                 }
                             };
                         }

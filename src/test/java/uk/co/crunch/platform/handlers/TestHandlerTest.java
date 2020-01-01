@@ -138,9 +138,9 @@ public class TestHandlerTest {
         runConfig("JUnit5PublicMethodTestPom");
 
         verify(this.logger).info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
-        verify(this.logger).warn("We should stop using JUnit5 assertions (JUnit5PublicMethodAssert.assertEquals)");
-        verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need to be public");
-        verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("We should stop using JUnit5 assertions (JUnit5PublicMethodAssertUnitTest.assertEquals)");
+        verify(this.logger).warn("Unit test class `JUnit5PublicMethodAssertUnitTest`, methods: [testA] do not need to be public");
+        verify(this.logger).warn("Unit test class `JUnit5PublicMethodAssertUnitTest`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).info("Test analysis [Java] completed in 0 msecs");
         verify(this.logger).info("Assertion types in use: [JUnit5 x 3]");
         verifyNoMoreInteractions(this.logger);
@@ -157,13 +157,13 @@ public class TestHandlerTest {
         verify(this.logger).warn("We should stop using JUnit4 assertions (JUnit4AssertAndTestUnitTest.assertEquals)");
         verify(this.logger).warn("We should stop using JUnit5 assertions (JUnit5Assert.assertEquals)");
 
-        verify(this.logger).warn("Test class `HamcrestAssert`, methods: [testA] do not need the prefix 'test'");
-        verify(this.logger).warn("Test class `JUnit3Assert`, methods: [testA] do not need the prefix 'test'");
-        verify(this.logger).warn("Test class `JUnit5Assert`, methods: [testA] do not need the prefix 'test'");
-        verify(this.logger).warn("Test class `JUnit5PublicAssert`, methods: [testA] do not need the prefix 'test'");
-        verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need to be public");
-        verify(this.logger).warn("Test class `JUnit5PublicMethodAssert`, methods: [testA] do not need the prefix 'test'");
-        verify(this.logger).warn("Test class `KotlinJUnit5Assert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Mixed test class `HamcrestAssert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Mixed test class `JUnit3Assert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Mixed test class `JUnit5Assert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Mixed test class `JUnit5PublicAssert`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Unit test class `JUnit5PublicMethodAssertUnitTest`, methods: [testA] do not need to be public");
+        verify(this.logger).warn("Unit test class `JUnit5PublicMethodAssertUnitTest`, methods: [testA] do not need the prefix 'test'");
+        verify(this.logger).warn("Mixed test class `KotlinJUnit5Assert`, methods: [testA] do not need the prefix 'test'");
         verify(this.logger).warn("Java test class `JUnit5PublicAssert` does not need to be public");
 
         verify(this.logger).info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");

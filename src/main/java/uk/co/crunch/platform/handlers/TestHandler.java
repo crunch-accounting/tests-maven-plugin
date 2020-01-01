@@ -11,7 +11,9 @@ import com.google.common.collect.Multiset;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.logging.Log;
 import org.objectweb.asm.Opcodes;
+import uk.co.crunch.platform.TestType;
 import uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides;
+import uk.co.crunch.platform.asm.AnnotatedFieldVisitor;
 import uk.co.crunch.platform.asm.ClassAnnotationVisitor;
 import uk.co.crunch.platform.asm.ClassDefinitionVisitor;
 import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
@@ -54,7 +56,7 @@ public class TestHandler implements HandlerOperation {
         }
     }
 
-    private static class TestsVisitor implements ClassDefinitionVisitor, ClassAnnotationVisitor, MethodAnnotationVisitor, MethodDefinitionVisitor, MethodCallVisitor {
+    private static class TestsVisitor implements ClassDefinitionVisitor, ClassAnnotationVisitor, MethodAnnotationVisitor, MethodDefinitionVisitor, MethodCallVisitor, AnnotatedFieldVisitor {
 
         private final Log logger;
         private final boolean enableAllOverrides;
@@ -68,6 +70,7 @@ public class TestHandler implements HandlerOperation {
 
         private final List<String> publicTestMethodsPerClass = new ArrayList<>();
         private final List<String> testPrefixMethodsPerClass = new ArrayList<>();
+        private final List<String> dubiousFieldsPerClass = new ArrayList<>();
 
         private final Multiset<AssertionType> assertionTypes = EnumMultiset.create(AssertionType.class);
         private boolean shownKotlinAssertJMigrateWarning;
@@ -194,6 +197,39 @@ public class TestHandler implements HandlerOperation {
             }
         }
 
+        @Override
+        public void finishedVisitingField(String className, TestType testType,
+                                          int fieldAccess, String fieldName, String fieldDescriptor, String fieldSignature,
+                                          List<String> annotationsForField) {
+
+            if (!className.endsWith("Test.class")) {
+                return;  // Skip non-tests
+            }
+
+            if ((fieldAccess & Opcodes.ACC_FINAL) != 0 && (fieldAccess & Opcodes.ACC_STATIC) != 0) {
+                return;  // Skip final statics
+            }
+
+            if (testType == TestType.Mixed) {
+                this.logger.info("Can't validate fields for unclear test type");
+                return;  // Skip mocks
+            }
+
+            if (testType == TestType.Unit && annotationsForField.stream().anyMatch(x -> x.startsWith("Lorg/mockito/"))) {
+                return;  // Skip mocks
+            }
+
+            if (testType == TestType.Integration &&
+                (annotationsForField.contains("Lorg/springframework/beans/factory/annotation/Autowired;") ||
+                    annotationsForField.contains("Lorg/springframework/beans/factory/annotation/Value;") ||
+                    annotationsForField.stream().anyMatch(x -> x.startsWith("Lorg/springframework/boot/test/mock")))) {
+                return;  // Skip injection stuff
+            }
+
+            this.dubiousFieldsPerClass.add(fieldName);
+//            System.out.println(className + ": " + className + " / " + fieldDescriptor + " / " + fieldSignature + " : " + annotationsForField);
+        }
+
         private void handleViolation(CrunchTestValidationOverrides override, ViolationHandler handler) {
             if (this.enableAllOverrides || isOverridden(override)) {
                 if (!this.classLevelOverrideWarningShown.contains(override)) {
@@ -228,15 +264,20 @@ public class TestHandler implements HandlerOperation {
         }
 
         @Override
-        public void finishedVisitingClass(String className) {
+        public void finishedVisitingClass(String className, TestType testType) {
             if (!this.publicTestMethodsPerClass.isEmpty()) {
-                this.logger.warn("Test class `" + displayClassName(className) + "`, methods: " + this.publicTestMethodsPerClass + " do not need to be public");
+                this.logger.warn(testType + " test class `" + displayClassName(className) + "`, methods: " + this.publicTestMethodsPerClass + " do not need to be public");
                 this.publicTestMethodsPerClass.clear();
             }
 
             if (!this.testPrefixMethodsPerClass.isEmpty()) {
-                this.logger.warn("Test class `" + displayClassName(className) + "`, methods: " + this.testPrefixMethodsPerClass + " do not need the prefix 'test'");
+                this.logger.warn(testType + " test class `" + displayClassName(className) + "`, methods: " + this.testPrefixMethodsPerClass + " do not need the prefix 'test'");
                 this.testPrefixMethodsPerClass.clear();
+            }
+
+            if (!this.dubiousFieldsPerClass.isEmpty()) {
+                this.logger.warn(testType + " test class `" + displayClassName(className) + "`, fields: " + this.dubiousFieldsPerClass + " are dubious");
+                this.dubiousFieldsPerClass.clear();
             }
         }
     }
