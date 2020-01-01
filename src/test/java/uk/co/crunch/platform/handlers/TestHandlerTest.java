@@ -147,8 +147,21 @@ public class TestHandlerTest {
     }
 
     @Test
+    public void testJUnit5DubiousAnnotations() throws Exception {
+        runConfigWithAllOverrides("JUnit5DubiousAnnotationsTestPom");
+
+        verify(this.logger).warn("Unit test class `DubiousAnnotationsUnitTest`, fields: [state] are dubious");
+        verify(this.logger).warn("Integration test class `DubiousAnnotationsIntegrationTest`, fields: [rogueMock, rogueSpy, state] are dubious");
+        verify(this.logger).warn("Unclassified test class `uk.co.crunch.samplesDubious.junit5Dubious.DubiousAnnotationsMiscellaneousTest` should clarify whether it is a Unit or Integration test");
+        verify(this.logger).info("Can't validate fields for unclear test type");
+        verify(this.logger).info("Test analysis [Java x 3] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [AssertJ x 3]");
+        verifyNoMoreInteractions(this.logger);
+    }
+
+    @Test
     public void testAll() throws Exception {
-        mojoForPom("AllTestsPom").execute(List.of(new TestHandler(this.logger, () -> 0L, true)));
+        runConfigWithAllOverrides("AllTestsPom");
 
         verify(this.logger).warn("Cannot combine JUnit 4 and JUnit 5 tests! See: JUnit4AssertAndTestUnitTest.class");
 
@@ -176,6 +189,10 @@ public class TestHandlerTest {
 
     private void runConfig(String configName) throws Exception {
         mojoForPom(configName).execute(List.of(new TestHandler(this.logger, () -> 0L, false)));
+    }
+
+    private void runConfigWithAllOverrides(String configName) throws Exception {
+        mojoForPom(configName).execute(List.of(new TestHandler(this.logger, () -> 0L, true)));
     }
 
     @SuppressWarnings("ConstantConditions")

@@ -54,7 +54,7 @@ public class AsmUtils {
                 try (InputStream theStream = Files.newInputStream(eachClass)) {
 
                     var className = eachClass.getFileName().toString();
-                    var testType = className.endsWith("IntegrationTest.class") ? TestType.Integration : (className.endsWith("Test.class") ? TestType.Unit : TestType.Mixed);
+                    var testType = className.endsWith("IntegrationTest.class") ? TestType.Integration : (className.endsWith("UnitTest.class") ? TestType.Unit : TestType.Mixed);
 
                     new ClassReader(theStream).accept(new ClassVisitor(API_VERSION) {
 
