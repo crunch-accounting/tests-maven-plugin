@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @CrunchTestValidationOverride(CrunchTestValidationOverrides.JUNIT5_ASSERTIONS)
-class JUnit5PublicMethodAssert {
+class JUnit5PublicMethodAssertUnitTest {
 
     @Test
     public void testA() {
