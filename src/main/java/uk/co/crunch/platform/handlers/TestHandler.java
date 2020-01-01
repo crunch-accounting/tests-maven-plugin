@@ -79,7 +79,6 @@ public class TestHandler implements HandlerOperation {
         private final Multiset<LanguageType> langStats = EnumMultiset.create(LanguageType.class);
 
         private boolean isMethodPublic;
-        private boolean isMethodPrivate;
 
         private boolean isClassPublic;
         private boolean shownClassPublicWarning;
@@ -94,6 +93,7 @@ public class TestHandler implements HandlerOperation {
             this.isClassPublic = ((access & Opcodes.ACC_PUBLIC) != 0);
             this.publicTestMethodsPerClass.clear();
             this.testPrefixMethodsPerClass.clear();
+            this.dubiousFieldsPerClass.clear();
 
             if (className.endsWith("Test") && !(className.endsWith("UnitTest") || className.endsWith("IntegrationTest"))) {
                 this.logger.warn("Unclassified test class `" + displayClassName(className) + "` should clarify whether it is a Unit or Integration test");
@@ -253,31 +253,21 @@ public class TestHandler implements HandlerOperation {
 
         @Override
         public void visitMethod(int access, String methodName, String desc, String signature, String[] exceptions) {
-            isMethodPublic = isMethodPrivate = false;
-
-            if ((access & Opcodes.ACC_PUBLIC) != 0) {
-                isMethodPublic = true;
-            }
-//            else if ((access & Opcodes.ACC_PRIVATE) != 0) {
-//                isMethodPrivate = true;
-//            }
+            isMethodPublic = (access & Opcodes.ACC_PUBLIC) != 0;
         }
 
         @Override
         public void finishedVisitingClass(String className, TestType testType) {
             if (!this.publicTestMethodsPerClass.isEmpty()) {
                 this.logger.warn(testType + " test class `" + displayClassName(className) + "`, methods: " + this.publicTestMethodsPerClass + " do not need to be public");
-                this.publicTestMethodsPerClass.clear();
             }
 
             if (!this.testPrefixMethodsPerClass.isEmpty()) {
                 this.logger.warn(testType + " test class `" + displayClassName(className) + "`, methods: " + this.testPrefixMethodsPerClass + " do not need the prefix 'test'");
-                this.testPrefixMethodsPerClass.clear();
             }
 
             if (!this.dubiousFieldsPerClass.isEmpty()) {
                 this.logger.warn(testType + " test class `" + displayClassName(className) + "`, fields: " + this.dubiousFieldsPerClass + " are dubious");
-                this.dubiousFieldsPerClass.clear();
             }
         }
     }
