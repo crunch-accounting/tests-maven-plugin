@@ -29,6 +29,7 @@ import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.JUNI
 import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.JUNIT4_ASSERTIONS;
 import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.JUNIT5_ASSERTIONS;
 import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.MIXED_JUNIT4_JUNIT5;
+import static uk.co.crunch.platform.api.tests.CrunchTestValidationOverrides.TRUTH_ASSERTIONS;
 
 public class TestHandler implements HandlerOperation {
 
@@ -194,6 +195,9 @@ public class TestHandler implements HandlerOperation {
                 this.assertionTypes.add(AssertionType.Strikt);
             } else if (owner.startsWith("org/assertj/core/api/Assertions")) {
                 this.assertionTypes.add(AssertionType.AssertJ);
+            } else if (owner.startsWith("com/google/common/truth/Truth")) {
+                this.assertionTypes.add(AssertionType.Truth);
+                handleViolation(TRUTH_ASSERTIONS, () -> "We should stop using Google Truth assertions (" + displayClassName(className) + "." + name + ")");
             }
         }
 
@@ -273,7 +277,7 @@ public class TestHandler implements HandlerOperation {
     }
 
     private enum AssertionType {
-        Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5, Strikt
+        Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5, Strikt, Truth
     }
 
     private enum LanguageType {
