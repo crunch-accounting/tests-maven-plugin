@@ -228,7 +228,7 @@ public class TestHandler implements HandlerOperation {
             if (testType == TestType.Integration &&
                 (annotationsForField.contains("Lorg/springframework/beans/factory/annotation/Autowired;") ||
                     annotationsForField.contains("Lorg/springframework/beans/factory/annotation/Value;") ||
-                    annotationsForField.stream().anyMatch(x -> x.startsWith("Lorg/springframework/boot/test/mock")))) {
+                    annotationsForField.stream().anyMatch(x -> x.startsWith("Lorg/springframework/boot/test/mock") || x.startsWith("Lcom/ninjasquad/springmockk")))) {
                 return;  // Skip injection stuff
             }
 
