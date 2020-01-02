@@ -133,6 +133,15 @@ public class TestHandlerTest {
     }
 
     @Test
+    public void testKotlinStrikt() throws Exception {
+        runConfig("KotlinStriktTestPom");
+
+        verify(this.logger).info("Test analysis [Kotlin] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [Strikt]");
+        verifyNoMoreInteractions(this.logger);
+    }
+
+    @Test
     public void testJUnit5PublicClass() throws Exception {
         try {
             runConfig("JUnit5PublicClassTestPom");
@@ -197,8 +206,8 @@ public class TestHandlerTest {
         verify(this.logger).info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
         verify(this.logger).warn("Kotlin tests ought to start moving from AssertJ => Strikt, where possible");
 
-        verify(this.logger).info("Test analysis [Java x 8, Kotlin] completed in 0 msecs");
-        verify(this.logger).info("Assertion types in use: [Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5 x 6, Truth]");
+        verify(this.logger).info("Test analysis [Java x 8, Kotlin x 2] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5 x 6, Strikt, Truth]");
         verifyNoMoreInteractions(this.logger);
     }
 
