@@ -96,6 +96,8 @@ public class TestHandler implements HandlerOperation {
             this.testPrefixMethodsPerClass.clear();
             this.dubiousFieldsPerClass.clear();
 
+            this.isKotlin = false;
+
             if (className.endsWith("Test") && !(className.endsWith("UnitTest") || className.endsWith("IntegrationTest"))) {
                 this.logger.warn("Unclassified test class `" + displayClassName(className) + "` should clarify whether it is a Unit or Integration test");
             }
