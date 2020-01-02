@@ -82,6 +82,20 @@ public class TestHandlerTest {
     }
 
     @Test
+    public void testTruthAssertions() throws Exception {
+        try {
+            runConfig("TruthTestPom");
+            fail();
+        } catch (CrunchRuleViolationException e) {
+            assertThat(e.getMessage()).isEqualTo("CrunchRuleViolationException: We should stop using Google Truth assertions (TruthAssert.assertThat)");
+        }
+
+        verify(this.logger).info("Test analysis [Java] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [Truth]");
+        verifyNoMoreInteractions(this.logger);
+    }
+
+    @Test
     public void testJUnit5() throws Exception {
         try {
             runConfig("JUnit5TestPom");
@@ -166,6 +180,7 @@ public class TestHandlerTest {
         verify(this.logger).warn("Cannot combine JUnit 4 and JUnit 5 tests! See: JUnit4AssertAndTestUnitTest.class");
 
         verify(this.logger).warn("We should stop using Hamcrest (HamcrestAssert.assertThat)");
+        verify(this.logger).warn("We should stop using Google Truth assertions (TruthAssert.assertThat)");
         verify(this.logger).warn("We should stop using JUnit3 assertions (JUnit3Assert.assertEquals)");
         verify(this.logger).warn("We should stop using JUnit4 assertions (JUnit4AssertAndTestUnitTest.assertEquals)");
         verify(this.logger).warn("We should stop using JUnit5 assertions (JUnit5Assert.assertEquals)");
@@ -182,8 +197,8 @@ public class TestHandlerTest {
         verify(this.logger).info("JUnit5 assertThrows() can be replaced by AssertJ too: https://www.baeldung.com/assertj-exception-assertion");
         verify(this.logger).warn("Kotlin tests ought to start moving from AssertJ => Strikt, where possible");
 
-        verify(this.logger).info("Test analysis [Java x 7, Kotlin] completed in 0 msecs");
-        verify(this.logger).info("Assertion types in use: [Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5 x 6]");
+        verify(this.logger).info("Test analysis [Java x 8, Kotlin] completed in 0 msecs");
+        verify(this.logger).info("Assertion types in use: [Hamcrest, AssertJ, JUnit3, JUnit4, JUnit5 x 6, Truth]");
         verifyNoMoreInteractions(this.logger);
     }
 
