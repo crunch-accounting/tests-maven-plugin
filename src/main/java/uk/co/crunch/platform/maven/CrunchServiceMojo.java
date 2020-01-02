@@ -7,11 +7,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -24,9 +22,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenResourcesFiltering;
 import org.jtwig.JtwigModel;
 import org.reflections.Reflections;
-import org.reflections.scanners.MethodAnnotationsScanner;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
 import uk.co.crunch.platform.asm.AsmVisitor;
 import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
 import uk.co.crunch.platform.handlers.HandlerOperation;
@@ -128,34 +123,6 @@ public class CrunchServiceMojo
 
         testClassLoader = new URLClassLoader(runtimeUrls, Thread.currentThread().getContextClassLoader());
         return testClassLoader;
-    }
-
-    public Reflections getReflectionsForAnnotations() {
-        if (reflectionsForAnnotations == null) {
-            reflectionsForAnnotations = new Reflections("uk.co.crunch", getTestClassLoader(),
-                new SubTypesScanner(),
-                new TypeAnnotationsScanner(),
-                new MethodAnnotationsScanner());
-        }
-        return reflectionsForAnnotations;
-    }
-
-    public boolean hasClass(final String fqn) {
-        try {
-            Class.forName(fqn, false, getTestClassLoader());
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
-    public boolean hasArtifact(final Predicate<Artifact> rule) {
-        for (Artifact each : this.project.getArtifacts()) {
-            if (rule.test(each)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public void analyseCrunchClasses(final DoneCheck doneCheck, final AsmVisitor... handlers) {

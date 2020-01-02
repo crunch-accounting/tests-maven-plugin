@@ -22,27 +22,4 @@ public class StringUtils {
         // remember to append any characters to the right of a match
         return sb.toString();
     }
-
-    public static CharSequence collapseWhitespace(CharSequence toBeStripped) {
-        if (toBeStripped == null || toBeStripped.length() < 1) {
-            return "";
-        }
-
-        final StringBuilder result = new StringBuilder();
-        boolean lastWasSpace = true;
-        int i = 0;
-        while (i < toBeStripped.length()) {
-            char c = toBeStripped.charAt(i++);
-            if (Character.isWhitespace(c)) {
-                if (!lastWasSpace) {
-                    result.append(' ');
-                }
-                lastWasSpace = true;
-            } else {
-                result.append(c);
-                lastWasSpace = false;
-            }
-        }
-        return result.toString().trim();
-    }
 }

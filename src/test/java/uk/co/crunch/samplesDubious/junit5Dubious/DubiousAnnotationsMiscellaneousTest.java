@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DubiousAnnotationsMiscellaneousTest {
 
-    private State state = new State();
+    private final State state = new State();
 
     @Test
     void hiTest() {

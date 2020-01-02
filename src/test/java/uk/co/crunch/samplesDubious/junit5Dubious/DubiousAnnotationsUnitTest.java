@@ -13,7 +13,7 @@ class DubiousAnnotationsUnitTest {
 
     @Mock private Object mock1;
     @Spy private Logger log;
-    private State state = new State();
+    private final State state = new State();
 
     private final static String CONST = "";
 

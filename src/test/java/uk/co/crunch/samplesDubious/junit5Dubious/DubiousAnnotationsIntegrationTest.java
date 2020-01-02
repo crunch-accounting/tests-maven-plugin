@@ -24,7 +24,7 @@ class DubiousAnnotationsIntegrationTest {
     @Mock private Object rogueMock;
     @Spy private Object rogueSpy;
 
-    private State state = new State();
+    private final State state = new State();
 
     private final static String CONST = "";
 
