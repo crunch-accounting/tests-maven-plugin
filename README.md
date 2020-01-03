@@ -39,6 +39,6 @@ The following are considered dubious, and should be reviewed for each project:
     * Test classes or methods needlessly `public`
     * Test methods needlessly having a `test` name prefix
 * Unit tests:
-    * Non-constant fields that are not any known kind of `Mock` or `Spy`
+    * Non-constant fields that are not any known kind of `@Mock` or `@Spy`
 * Integration tests:
-    * Non-constant fields that are not Spring `@Autowired`, Spring Boot `@Value`, or any known kind of `MockBean` or `SpyBean`
+    * Non-constant fields that are not Spring `@Autowired`, Spring Boot `@Value`, or any known kind of `@MockBean` or `@SpyBean`
