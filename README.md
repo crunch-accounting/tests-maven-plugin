@@ -41,4 +41,4 @@ The following are considered dubious, and should be reviewed for each project:
 * Unit tests:
     * Non-constant fields that are not any known kind of `Mock` or `Spy`
 * Integration tests:
-    * Non-constant fields that are not any known kind of `MockBean` or `SpyBean`
+    * Non-constant fields that are not Spring `@Autowired`, Spring Boot `@Value`, or any known kind of `MockBean` or `SpyBean`
