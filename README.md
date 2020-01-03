@@ -11,8 +11,8 @@ Add this Maven plugin to your project to enable automatic validation of JVM test
 ## Goal:
 
 * Coalesce all our unit and integration tests around:
-   * [JUnit 5](https://junit.org/junit5/) tests and [AssertJ](https://github.com/joel-costigliola/assertj-core) assertions for Java/Kotlin, or:
-   * JUnit 5 tests and [Strikt](https://strikt.io/) assertions for Kotlin
+     * [JUnit 5](https://junit.org/junit5/) tests and [AssertJ](https://github.com/joel-costigliola/assertj-core) assertions for Java/Kotlin, or:
+     * JUnit 5 tests and [Strikt](https://strikt.io/) assertions for Kotlin
 * In general, use static analysis to apply and enforce our own test quality rules
 * Ultimately, use whatever automation we can to make it easier to move between projects, to write efficient tests, and harder to write bad tests by mistake.
 
@@ -36,9 +36,9 @@ The following are regarded as fatal errors:
 The following are considered dubious, and should be reviewed for each project:
 
 * All JUnit 5 tests:
-  * Test classes or methods needlessly `public`
-  * Test methods needlessly having a `test` name prefix
+    * Test classes or methods needlessly `public`
+    * Test methods needlessly having a `test` name prefix
 * Unit tests:
-  * Non-constant fields that are not any known kind of `Mock` or `Spy`
+    * Non-constant fields that are not any known kind of `Mock` or `Spy`
 * Integration tests:
-  * Non-constant fields that are not any known kind of `MockBean` or `SpyBean`
+    * Non-constant fields that are not any known kind of `MockBean` or `SpyBean`
