@@ -1,3 +1,0 @@
-[submodule "src/main/resources/crunch-coding-standards"]
-	path = src/main/resources/crunch-coding-standards
-	url = git@bitbucket.org:crunch-ondemand/crunch-coding-standards.git

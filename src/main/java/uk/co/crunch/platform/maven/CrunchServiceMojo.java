@@ -1,27 +1,16 @@
 package uk.co.crunch.platform.maven;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CaseFormat;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.filtering.MavenResourcesFiltering;
-import org.jtwig.JtwigModel;
-import org.reflections.Reflections;
 import uk.co.crunch.platform.asm.AsmVisitor;
 import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
 import uk.co.crunch.platform.handlers.HandlerOperation;
@@ -36,33 +25,10 @@ import uk.co.crunch.platform.utils.AsmUtils;
 public class CrunchServiceMojo
     extends AbstractMojo {
 
-    /**
-     * The character encoding scheme to be applied when filtering resources.
-     */
-    @Parameter(defaultValue = "${project.build.sourceEncoding}")
-    protected String encoding;
-
-    /**
-     *
-     */
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     protected MavenProject project;
 
-    @Parameter(defaultValue = "${session}", readonly = true, required = true)
-    protected MavenSession session;
-
-    @Component(role = MavenResourcesFiltering.class, hint = "default")
-    protected MavenResourcesFiltering mavenResourcesFiltering;
-
-    private final JtwigModel model = JtwigModel.newModel();
-    private final MojoState state = new MojoState();
-
-    private URLClassLoader testClassLoader;  // cached
     private List<String> testClasspathElements;  // cached
-    private Reflections reflectionsForAnnotations;  // cached
-    private String acquiredApplicationName;  // cached
-
-    private final JtwigModel sharedServiceMetadataModel = JtwigModel.newModel();
 
     public List<HandlerOperation> defaultHandlers() {
         final List<HandlerOperation> operations = new ArrayList<>();
@@ -77,20 +43,7 @@ public class CrunchServiceMojo
     }
 
     public void execute(List<HandlerOperation> operations) {
-
-        model.with("serviceName", getServiceName());
-
-        state.setDataModel(model);
-
         operations.forEach(each -> each.run(this));
-    }
-
-    private String getServiceNameUpperCase() {
-        return project.getArtifactId().toUpperCase().replace('-', '_');  // Normalise
-    }
-
-    public String getServiceName() {
-        return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, getServiceNameUpperCase());
     }
 
     public List<String> getTestClasspathElementsList() {
@@ -102,27 +55,6 @@ public class CrunchServiceMojo
             }
         }
         return testClasspathElements;
-    }
-
-    public URLClassLoader getTestClassLoader() {
-        if (testClassLoader != null) {
-            return testClassLoader;
-        }
-
-        final List<String> runtimeClasspathElements = getTestClasspathElementsList();
-        final URL[] runtimeUrls = new URL[runtimeClasspathElements.size()];
-        int i = 0;
-
-        for (String element : runtimeClasspathElements) {
-            try {
-                runtimeUrls[i++] = new File(element).toURI().toURL();
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);  // Not likely
-            }
-        }
-
-        testClassLoader = new URLClassLoader(runtimeUrls, Thread.currentThread().getContextClassLoader());
-        return testClassLoader;
     }
 
     public void analyseCrunchClasses(final DoneCheck doneCheck, final AsmVisitor... handlers) {
@@ -139,24 +71,7 @@ public class CrunchServiceMojo
         }
     }
 
-    @VisibleForTesting
-    public MojoState getState() {
-        return state;
-    }
-
-    public JtwigModel getModel() {
-        return model;
-    }
-
     public MavenProject getProject() {
         return project;
-    }
-
-    public MavenResourcesFiltering getMavenResourcesFiltering() {
-        return mavenResourcesFiltering;
-    }
-
-    public JtwigModel getMetadataModel() {
-        return sharedServiceMetadataModel;
     }
 }

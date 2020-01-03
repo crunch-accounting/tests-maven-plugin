@@ -164,26 +164,7 @@ public class AsmUtils {
                                         handler.visitMethodAnnotation(className, descriptor, methodName, null);
                                     }
 
-                                    return new AnnotationVisitor(API_VERSION) {
-                                        @Override
-                                        public void visit(final String annotationName, final Object value) {
-                                            for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                                handler.visitMethodAnnotation(className, lastAnnotationDescriptor, annotationName, value);
-                                            }
-                                        }
-
-                                        @Override
-                                        public AnnotationVisitor visitArray(final String arrayName) {
-                                            return new AnnotationVisitor(API_VERSION) {
-                                                @Override
-                                                public void visit(final String name, final Object value) {
-                                                    for (MethodAnnotationVisitor handler : filterHandlers(MethodAnnotationVisitor.class, handlers).collect(toList())) {
-                                                        handler.visitMethodAnnotation(className, lastAnnotationDescriptor, arrayName, value);
-                                                    }
-                                                }
-                                            };
-                                        }
-                                    };
+                                    return null;
                                 }
                             };
                         }
