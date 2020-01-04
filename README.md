@@ -1,5 +1,7 @@
 # Crunch JVM Test validator
 
+[![Build Status](https://travis-ci.org/crunch-accounting/tests-maven-plugin.svg?branch=master)](https://travis-ci.org/crunch-accounting/tests-maven-plugin) [![codecov](https://codecov.io/gh/crunch-accounting/tests-maven-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/crunch-accounting/tests-maven-plugin)
+
 Add this Maven plugin to your project to enable automatic validation of JVM tests against our standards:
 
     <plugin>
