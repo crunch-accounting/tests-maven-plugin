@@ -4,7 +4,7 @@
 
     <groupId>uk.co.crunch</groupId>
     <artifactId>crunch-tests-maven-plugin</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>maven-plugin</packaging>
 
     <name>crunch-tests-maven-plugin</name>
@@ -14,8 +14,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mvn.version>3.3.9</mvn.version>
-        <crunch-services-plugin-api.version>2.3.5</crunch-services-plugin-api.version>
+        <crunch-services-plugin-api.version>2.3.9</crunch-services-plugin-api.version>
         <kotlin.version>1.3.61</kotlin.version>
+        <asm.version>7.3.1</asm.version>
     </properties>
 
     <dependencies>
@@ -29,7 +30,7 @@
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>7.2</version>
+            <version>${asm.version}</version>
         </dependency>
 
         <!-- Proper compile-time dependencies -->
