@@ -27,6 +27,7 @@ import uk.co.crunch.platform.asm.ClassDefinitionVisitor;
 import uk.co.crunch.platform.asm.MethodAnnotationVisitor;
 import uk.co.crunch.platform.asm.MethodCallVisitor;
 import uk.co.crunch.platform.asm.MethodDefinitionVisitor;
+import uk.co.crunch.platform.asm.VirtualMethodWithParamsVisitor;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
@@ -145,6 +146,8 @@ public class AsmUtils {
                                 handler.visitMethod(access, methodName, desc, signature, exceptions);
                             }
 
+                            var ldcs = new ArrayList<String>();
+
                             return new MethodVisitor(API_VERSION) {
 
                                 String lastAnnotationDescriptor = null;
@@ -153,6 +156,17 @@ public class AsmUtils {
                                 public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
                                     for (MethodCallVisitor handler : filterHandlers(MethodCallVisitor.class, handlers).collect(toList())) {
                                         handler.visitMethodCall(className, owner, name, desc);
+                                    }
+
+                                    for (VirtualMethodWithParamsVisitor handler : filterHandlers(VirtualMethodWithParamsVisitor.class, handlers).collect(toList())) {
+                                        handler.visit(eachClass, methodName, owner, name, desc, ldcs);
+                                    }
+                                }
+
+                                @Override
+                                public void visitLdcInsn(final Object param) {
+                                    if (param != null) {
+                                        ldcs.add(param.toString());
                                     }
                                 }
 
