@@ -29,6 +29,9 @@ public class CrunchServiceMojo
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     protected MavenProject project;
 
+    @Parameter
+    private boolean detectForbiddenMethods = true;
+
     private List<String> testClasspathElements;  // cached
 
     public List<HandlerOperation> defaultHandlers() {
@@ -75,5 +78,9 @@ public class CrunchServiceMojo
 
     public MavenProject getProject() {
         return project;
+    }
+
+    public boolean isDetectForbiddenMethods() {
+        return detectForbiddenMethods;
     }
 }

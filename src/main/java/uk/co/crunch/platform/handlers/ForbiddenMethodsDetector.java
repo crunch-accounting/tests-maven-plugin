@@ -27,6 +27,11 @@ public class ForbiddenMethodsDetector implements HandlerOperation {
 
     @Override
     public void run(final CrunchServiceMojo mojo) {
+        if (!mojo.isDetectForbiddenMethods()) {
+            mojo.getLog().warn("Skipping validation of forbidden test methods");
+            return;
+        }
+
         var visitor = new BannedMethodVisitor(mojo.getLog());
         mojo.analyseCrunchClasses(() -> false, visitor);
     }
