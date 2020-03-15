@@ -13,6 +13,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import uk.co.crunch.platform.asm.AsmVisitor;
 import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
+import uk.co.crunch.platform.handlers.ForbiddenMethodsDetector;
 import uk.co.crunch.platform.handlers.HandlerOperation;
 import uk.co.crunch.platform.handlers.TestHandler;
 import uk.co.crunch.platform.utils.AsmUtils;
@@ -33,6 +34,7 @@ public class CrunchServiceMojo
     public List<HandlerOperation> defaultHandlers() {
         final List<HandlerOperation> operations = new ArrayList<>();
 
+        operations.add(new ForbiddenMethodsDetector());
         operations.add(new TestHandler(this.getLog(), System::currentTimeMillis, false));
 
         return operations;
