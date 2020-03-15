@@ -25,14 +25,20 @@ public class ForbiddenMethodsDetector implements HandlerOperation {
             new ForbiddenMethod("dedicated functional", "java.util", "Objects", "isNull")
     );
 
+    private final Log logger;
+
+    public ForbiddenMethodsDetector(Log logger) {
+        this.logger = logger;
+    }
+
     @Override
     public void run(final CrunchServiceMojo mojo) {
         if (!mojo.isDetectForbiddenMethods()) {
-            mojo.getLog().warn("Skipping validation of forbidden test methods");
+            this.logger.warn("Skipping validation of forbidden test methods");
             return;
         }
 
-        var visitor = new BannedMethodVisitor(mojo.getLog());
+        var visitor = new BannedMethodVisitor(this.logger);
         mojo.analyseCrunchClasses(() -> false, visitor);
     }
 

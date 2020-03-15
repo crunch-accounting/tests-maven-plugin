@@ -37,7 +37,7 @@ public class CrunchServiceMojo
     public List<HandlerOperation> defaultHandlers() {
         final List<HandlerOperation> operations = new ArrayList<>();
 
-        operations.add(new ForbiddenMethodsDetector());
+        operations.add(new ForbiddenMethodsDetector(this.getLog()));
         operations.add(new TestHandler(this.getLog(), System::currentTimeMillis, false));
 
         return operations;
