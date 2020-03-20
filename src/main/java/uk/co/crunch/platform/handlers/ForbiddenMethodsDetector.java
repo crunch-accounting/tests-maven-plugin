@@ -22,7 +22,13 @@ public class ForbiddenMethodsDetector implements HandlerOperation {
             new ForbiddenMethod("Guava", GUAVA_PKG + "collect", "Sets", "newTreeSet"),
             new ForbiddenMethod("Guava", GUAVA_PKG + "collect", "Maps", "newHashMap"),
             new ForbiddenMethod("dedicated functional", "java.util", "Objects", "nonNull"),
-            new ForbiddenMethod("dedicated functional", "java.util", "Objects", "isNull")
+            new ForbiddenMethod("dedicated functional", "java.util", "Objects", "isNull"),
+            new ForbiddenMethod("pre-Java 9", "java.util", "Collections", "singleton"),
+            new ForbiddenMethod("pre-Java 9", "java.util", "Collections", "singletonList"),
+            new ForbiddenMethod("pre-Java 9", "java.util", "Collections", "singletonMap"),
+            new ForbiddenMethod("pre-Java 9", "java.util", "Collections", "emptySet"),
+            new ForbiddenMethod("pre-Java 9", "java.util", "Collections", "emptyList"),
+            new ForbiddenMethod("pre-Java 9", "java.util", "Collections", "emptyMap")
     );
 
     private final Log logger;

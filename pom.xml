@@ -4,7 +4,7 @@
 
     <groupId>uk.co.crunch</groupId>
     <artifactId>crunch-tests-maven-plugin</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <packaging>maven-plugin</packaging>
 
     <name>crunch-tests-maven-plugin</name>
