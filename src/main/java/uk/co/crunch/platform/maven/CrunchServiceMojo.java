@@ -16,6 +16,7 @@ import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
 import uk.co.crunch.platform.handlers.ForbiddenMethodsDetector;
 import uk.co.crunch.platform.handlers.HandlerOperation;
 import uk.co.crunch.platform.handlers.TestHandler;
+import uk.co.crunch.platform.template.DataModel;
 import uk.co.crunch.platform.utils.AsmUtils;
 
 @Mojo(
@@ -33,6 +34,8 @@ public class CrunchServiceMojo
     private boolean detectForbiddenMethods = true;
 
     private List<String> testClasspathElements;  // cached
+
+    private final DataModel sharedServiceMetadataModel = new DataModel();
 
     public List<HandlerOperation> defaultHandlers() {
         final List<HandlerOperation> operations = new ArrayList<>();
@@ -82,5 +85,9 @@ public class CrunchServiceMojo
 
     public boolean isDetectForbiddenMethods() {
         return detectForbiddenMethods;
+    }
+
+    public DataModel getMetadataModel() {
+        return sharedServiceMetadataModel;
     }
 }
