@@ -82,6 +82,13 @@
             <version>3.8.1</version>
         </dependency>
 
+        <!-- Parse any YAML app properties -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.25</version>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
@@ -115,7 +122,6 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Test dep - not used for *our own* tests! -->

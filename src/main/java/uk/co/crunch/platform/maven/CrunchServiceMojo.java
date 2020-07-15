@@ -3,6 +3,7 @@ package uk.co.crunch.platform.maven;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
@@ -15,6 +16,7 @@ import uk.co.crunch.platform.asm.AsmVisitor;
 import uk.co.crunch.platform.asm.AsmVisitor.DoneCheck;
 import uk.co.crunch.platform.handlers.ForbiddenMethodsDetector;
 import uk.co.crunch.platform.handlers.HandlerOperation;
+import uk.co.crunch.platform.handlers.InfrastructureEnabledInTestDetector;
 import uk.co.crunch.platform.handlers.TestHandler;
 import uk.co.crunch.platform.template.DataModel;
 import uk.co.crunch.platform.utils.AsmUtils;
@@ -40,6 +42,7 @@ public class CrunchServiceMojo
     public List<HandlerOperation> defaultHandlers() {
         final List<HandlerOperation> operations = new ArrayList<>();
 
+        operations.add(new InfrastructureEnabledInTestDetector(this.getLog()));
         operations.add(new ForbiddenMethodsDetector(this.getLog()));
         operations.add(new TestHandler(this.getLog(), System::currentTimeMillis, false));
 
@@ -51,6 +54,8 @@ public class CrunchServiceMojo
     }
 
     public void execute(List<HandlerOperation> operations) {
+        PropertiesHelper.storeProperties(this);
+
         operations.forEach(each -> each.run(this));
     }
 
@@ -89,5 +94,10 @@ public class CrunchServiceMojo
 
     public DataModel getMetadataModel() {
         return sharedServiceMetadataModel;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getApplicationProperties() {
+        return (Map<String, Object>) sharedServiceMetadataModel.get("application_properties");
     }
 }
