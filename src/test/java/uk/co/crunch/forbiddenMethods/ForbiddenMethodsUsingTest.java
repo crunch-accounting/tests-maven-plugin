@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("JUnit5AssertionsConverter")
 public class ForbiddenMethodsUsingTest {
 
     @Test

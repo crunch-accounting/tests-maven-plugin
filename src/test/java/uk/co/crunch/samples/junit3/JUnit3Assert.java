@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static junit.framework.TestCase.assertEquals;
 
+@SuppressWarnings("JUnit5AssertionsConverter")
 class JUnit3Assert {
 
     @Test

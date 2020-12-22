@@ -4,7 +4,7 @@ import org.apache.maven.plugin.logging.Log
 import uk.co.crunch.platform.exceptions.CrunchRuleViolationException
 import uk.co.crunch.platform.maven.CrunchServiceMojo
 
-class InfrastructureEnabledInTestDetector(private val logger: Log) : HandlerOperation {
+class InfrastructureEnabledInTestDetector(@Suppress("unused") private val logger: Log) : HandlerOperation {
     override fun run(mojo: CrunchServiceMojo) {
         val props = mojo.applicationProperties
 

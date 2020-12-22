@@ -1,14 +1,15 @@
 package uk.co.crunch.samplesDubious.junit5Dubious;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(MockitoExtension.class)
 class DubiousAnnotationsUnitTest {
 
     @Mock private Object mock1;
@@ -16,11 +17,6 @@ class DubiousAnnotationsUnitTest {
     private final State state = new State();
 
     private final static String CONST = "";
-
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
     void hiTest() {
