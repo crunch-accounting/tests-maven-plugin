@@ -73,7 +73,7 @@ public class CrunchServiceMojo
     public void analyseCrunchClasses(final DoneCheck doneCheck, final AsmVisitor... handlers) {
         for (String classPathEntry : getTestClasspathElementsList()) {
             try {
-                AsmUtils.visitCrunchClasses(classPathEntry, doneCheck, handlers);
+                AsmUtils.visitCrunchClasses(classPathEntry, doneCheck, List.of(handlers));
 
                 if (doneCheck.done()) {
                     break;
